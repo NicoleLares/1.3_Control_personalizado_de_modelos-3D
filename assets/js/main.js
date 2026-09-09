@@ -1,243 +1,768 @@
 import * as THREE from 'three';
-
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 
+
+// ============================================================
+// ESCENA
+// ============================================================
 
 const scene = new THREE.Scene();
 
 scene.background = new THREE.Color(0x07111f);
 
 
+// ============================================================
+// CÁMARA
+// ============================================================
+
 const camera = new THREE.PerspectiveCamera(
-
     50,
-
     window.innerWidth / window.innerHeight,
-
     0.1,
-
     100
-
 );
 
 camera.position.set(5, 3.5, 7);
 
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+// ============================================================
+// RENDERIZADOR
+// ============================================================
 
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+const renderer = new THREE.WebGLRenderer({
+    antialias: true
+});
 
-renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(
+    Math.min(window.devicePixelRatio, 2)
+);
+
+renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+);
 
 renderer.shadowMap.enabled = true;
 
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type =
+    THREE.PCFSoftShadowMap;
 
-document.getElementById('scene-container').appendChild(renderer.domElement);
+
+document
+    .getElementById('scene-container')
+    .appendChild(renderer.domElement);
 
 
-const controls = new OrbitControls(camera, renderer.domElement);
+// ============================================================
+// CONTROLES DE CÁMARA
+// ============================================================
+
+const controls = new OrbitControls(
+    camera,
+    renderer.domElement
+);
 
 controls.enableDamping = true;
 
-controls.target.set(0, 1, 0);
+controls.target.set(
+    0,
+    1,
+    0
+);
 
 
-const hemiLight = new THREE.HemisphereLight(0xffffff, 0x223344, 1.8);
+// ============================================================
+// ILUMINACIÓN
+// ============================================================
+
+const hemiLight = new THREE.HemisphereLight(
+    0xffffff,
+    0x223344,
+    1.8
+);
 
 scene.add(hemiLight);
 
 
-const mainLight = new THREE.DirectionalLight(0xffffff, 3);
+const mainLight = new THREE.DirectionalLight(
+    0xffffff,
+    3
+);
 
-mainLight.position.set(5, 10, 6);
+mainLight.position.set(
+    5,
+    10,
+    6
+);
 
 mainLight.castShadow = true;
 
-mainLight.shadow.mapSize.set(2048, 2048);
+mainLight.shadow.mapSize.set(
+    2048,
+    2048
+);
 
 scene.add(mainLight);
 
 
+// ============================================================
+// SUELO
+// ============================================================
+
 const floor = new THREE.Mesh(
 
-    new THREE.PlaneGeometry(20, 20),
+    new THREE.PlaneGeometry(
+        20,
+        20
+    ),
 
-    new THREE.MeshStandardMaterial({ color: 0x263445, roughness: 0.9 })
+    new THREE.MeshStandardMaterial({
+        color: 0x263445,
+        roughness: 0.9
+    })
 
 );
 
-floor.rotation.x = -Math.PI / 2;
+floor.rotation.x =
+    -Math.PI / 2;
 
 floor.receiveShadow = true;
 
 scene.add(floor);
 
-scene.add(new THREE.GridHelper(20, 20, 0x7dd3fc, 0x475569));
 
+// ============================================================
+// CUADRÍCULA
+// ============================================================
+
+const grid = new THREE.GridHelper(
+    20,
+    20,
+    0x7dd3fc,
+    0x475569
+);
+
+scene.add(grid);
+
+
+// ============================================================
+// VARIABLES
+// ============================================================
 
 const loader = new FBXLoader();
 
 const clock = new THREE.Clock();
 
+
+// Aquí se guardarán todas las animaciones
 const actions = {};
 
+
+// Modelo
 let model;
 
+
+// Controlador de animaciones
 let mixer;
 
-let currentAction;
 
+// Animación que se está reproduciendo actualmente
+let currentAction = null;
+
+
+// Nombre de la animación actual
+let currentAnimationName = null;
+
+
+// ============================================================
+// ARCHIVOS DE ANIMACIÓN
+// ============================================================
 
 const animationFiles = {
 
-    dagger: './assets/models/animations/Double_Dagger.fbx',
+    dagger:
+        './assets/models/animations/Double_Dagger.fbx',
 
-    jumping: './assets/models/animations/Jumping.fbx',
+    jumping:
+        './assets/models/animations/Jumping.fbx',
 
-    punching: './assets/models/animations/Punching.fbx',
+    punching:
+        './assets/models/animations/Punching.fbx',
 
-    stand: './assets/models/animations/Stand.fbx',
+    stand:
+        './assets/models/animations/Stand.fbx',
 
-    uppercut: './assets/models/animations/Uppercut.fbx'
+    uppercut:
+        './assets/models/animations/Uppercut.fbx'
 
 };
 
 
+// ============================================================
+// NOMBRES QUE SE MOSTRARÁN EN PANTALLA
+// ============================================================
+
+const animationLabels = {
+
+    dagger:
+        'DOUBLE DAGGER',
+
+    jumping:
+        'JUMPING',
+
+    punching:
+        'PUNCHING',
+
+    stand:
+        'STAND',
+
+    uppercut:
+        'UPPERCUT'
+
+};
+
+
+// ============================================================
+// CARGAR ANIMACIÓN
+// ============================================================
+
 function loadAnimation(name, url) {
 
-    return new Promise((resolve, reject) => {
+    return new Promise(
+        (resolve, reject) => {
 
-        loader.load(url, (fbx) => {
+            loader.load(
 
-            const clip = fbx.animations[0];
+                url,
 
-            actions[name] = mixer.clipAction(clip);
+                (fbx) => {
 
-            resolve();
+                    // Verificamos que el archivo tenga animación
+                    if (
+                        !fbx.animations ||
+                        fbx.animations.length === 0
+                    ) {
 
-        }, undefined, reject);
+                        console.warn(
+                            `El archivo ${name} no contiene animaciones.`
+                        );
 
-    });
+                        resolve();
+
+                        return;
+
+                    }
+
+
+                    // Obtenemos el primer clip
+                    const clip =
+                        fbx.animations[0];
+
+
+                    // Creamos la acción
+                    const action =
+                        mixer.clipAction(clip);
+
+
+                    // ----------------------------------------------------
+                    // IMPORTANTE:
+                    // La animación se repetirá indefinidamente.
+                    // ----------------------------------------------------
+
+                    action.setLoop(
+                        THREE.LoopRepeat,
+                        Infinity
+                    );
+
+
+                    action.clampWhenFinished =
+                        false;
+
+
+                    action.enabled =
+                        true;
+
+
+                    // Guardamos la acción
+                    actions[name] =
+                        action;
+
+
+                    console.log(
+                        `Animación cargada correctamente: ${name}`
+                    );
+
+
+                    resolve();
+
+                },
+
+                undefined,
+
+                (error) => {
+
+                    console.error(
+                        `Error cargando la animación ${name}:`,
+                        error
+                    );
+
+                    reject(error);
+
+                }
+
+            );
+
+        }
+    );
 
 }
 
+
+// ============================================================
+// CAMBIAR / REPRODUCIR ANIMACIÓN
+// ============================================================
 
 function playAction(name) {
 
-    const nextAction = actions[name];
-
-    if (!nextAction || nextAction === currentAction) return;
-
-
-    if (currentAction) currentAction.fadeOut(0.25);
+    const nextAction =
+        actions[name];
 
 
-    nextAction
+    // Si no existe, salir
+    if (!nextAction) {
 
-        .reset()
+        console.warn(
+            `No existe la animación: ${name}`
+        );
 
-        .setEffectiveTimeScale(1)
+        return;
 
-        .setEffectiveWeight(1)
-
-        .fadeIn(0.25)
-
-        .play();
-
-
-    currentAction = nextAction;
-
-    document.getElementById('animation-name').textContent = name.toUpperCase();
-
-}
+    }
 
 
-loader.load('./assets/models/character.fbx', async (fbx) => {
+    // ========================================================
+    // SI SE PRESIONA LA MISMA ANIMACIÓN
+    // ========================================================
+    //
+    // No hacemos reset.
+    //
+    // Esto significa que si presionas nuevamente la misma
+    // tecla, el movimiento NO comenzará desde cero.
+    // Continuará normalmente.
+    // ========================================================
 
-    model = fbx;
+    if (
+        currentAction === nextAction
+    ) {
 
-    model.scale.setScalar(0.01);
+        return;
 
-    model.position.set(0, 0, 0);
-
-
-    model.traverse((child) => {
-
-        if (child.isMesh) {
-
-            child.castShadow = true;
-
-            child.receiveShadow = true;
-
-        }
-
-    });
+    }
 
 
-    scene.add(model);
+    // ========================================================
+    // PRIMERA ANIMACIÓN
+    // ========================================================
 
-    mixer = new THREE.AnimationMixer(model);
+    if (!currentAction) {
+
+        nextAction
+            .reset()
+            .setEffectiveTimeScale(1)
+            .setEffectiveWeight(1)
+            .play();
 
 
-    await Promise.all(
+        currentAction =
+            nextAction;
 
-        Object.entries(animationFiles).map(([name, url]) => loadAnimation(name, url))
 
+        currentAnimationName =
+            name;
+
+
+        updateAnimationName(name);
+
+
+        return;
+
+    }
+
+
+    // ========================================================
+    // GUARDAMOS EL PROGRESO DE LA ANIMACIÓN ACTUAL
+    // ========================================================
+
+    const currentClip =
+        currentAction.getClip();
+
+
+    let progress = 0;
+
+
+    if (
+        currentClip.duration > 0
+    ) {
+
+        progress =
+            (
+                currentAction.time %
+                currentClip.duration
+            )
+            /
+            currentClip.duration;
+
+    }
+
+
+    // ========================================================
+    // PREPARAMOS LA NUEVA ANIMACIÓN
+    // ========================================================
+
+    const nextClip =
+        nextAction.getClip();
+
+
+    nextAction.reset();
+
+
+    nextAction.enabled =
+        true;
+
+
+    nextAction.setEffectiveTimeScale(
+        1
     );
 
 
-    playAction('idle');
-
-}, undefined, (error) => console.error('Error al cargar el modelo:', error));
-
-
-window.addEventListener('keydown', (event) => {
-
-    const keyboard = {
-
-        Digit1: 'Double_Dagger',
-
-        Digit2: 'Jumping',
-
-        Digit3: 'Punching',
-
-        Digit4: 'Stand',
-
-        Digit5: 'Uppercut'
-
-    };
+    nextAction.setEffectiveWeight(
+        1
+    );
 
 
-    if (keyboard[event.code]) playAction(keyboard[event.code]);
+    // --------------------------------------------------------
+    // Intentamos mantener aproximadamente el mismo porcentaje
+    // del movimiento anterior.
+    //
+    // Esto ayuda a que la transición sea menos brusca.
+    // --------------------------------------------------------
 
-});
+    nextAction.time =
+        progress *
+        nextClip.duration;
 
 
-function animate() {
+    // Comenzamos la nueva animación
+    nextAction.play();
 
-    const delta = clock.getDelta();
 
-    if (mixer) mixer.update(delta);
+    // ========================================================
+    // TRANSICIÓN SUAVE
+    // ========================================================
+    //
+    // Mezcla la animación anterior con la nueva durante
+    // 0.35 segundos.
+    //
+    // De esta forma NO se corta bruscamente el personaje.
+    // ========================================================
 
-    controls.update();
+    nextAction.crossFadeFrom(
+        currentAction,
+        0.35,
+        true
+    );
 
-    renderer.render(scene, camera);
+
+    // Guardamos la nueva acción como actual
+    currentAction =
+        nextAction;
+
+
+    currentAnimationName =
+        name;
+
+
+    // Actualizamos texto en pantalla
+    updateAnimationName(name);
 
 }
 
 
-renderer.setAnimationLoop(animate);
+// ============================================================
+// ACTUALIZAR NOMBRE DE ANIMACIÓN
+// ============================================================
+
+function updateAnimationName(name) {
+
+    const element =
+        document.getElementById(
+            'animation-name'
+        );
 
 
-window.addEventListener('resize', () => {
+    if (!element) return;
 
-    camera.aspect = window.innerWidth / window.innerHeight;
 
-    camera.updateProjectionMatrix();
+    element.textContent =
+        animationLabels[name] ||
+        name.toUpperCase();
 
-    renderer.setSize(window.innerWidth, window.innerHeight);
+}
 
-});
+
+// ============================================================
+// CARGAR PERSONAJE
+// ============================================================
+
+loader.load(
+
+    './assets/models/character.fbx',
+
+    async (fbx) => {
+
+        // Guardamos modelo
+        model =
+            fbx;
+
+
+        // Tamaño
+        model.scale.setScalar(
+            0.01
+        );
+
+
+        // Posición
+        model.position.set(
+            0,
+            0,
+            0
+        );
+
+
+        // ====================================================
+        // SOMBRAS
+        // ====================================================
+
+        model.traverse(
+            (child) => {
+
+                if (child.isMesh) {
+
+                    child.castShadow =
+                        true;
+
+                    child.receiveShadow =
+                        true;
+
+                }
+
+            }
+        );
+
+
+        // Agregamos a escena
+        scene.add(model);
+
+
+        // ====================================================
+        // CREAMOS EL ANIMATION MIXER
+        // ====================================================
+
+        mixer =
+            new THREE.AnimationMixer(
+                model
+            );
+
+
+        // ====================================================
+        // CARGAMOS TODAS LAS ANIMACIONES
+        // ====================================================
+
+        try {
+
+            await Promise.all(
+
+                Object
+                    .entries(animationFiles)
+                    .map(
+
+                        ([name, url]) =>
+
+                            loadAnimation(
+                                name,
+                                url
+                            )
+
+                    )
+
+            );
+
+
+            console.log(
+                'Todas las animaciones fueron cargadas.'
+            );
+
+
+            // =================================================
+            // ANIMACIÓN INICIAL
+            // =================================================
+            //
+            // Antes tenías "idle", pero no tienes Idle.fbx.
+            // Por eso usamos Stand.
+            // =================================================
+
+            playAction(
+                'stand'
+            );
+
+        }
+
+        catch (error) {
+
+            console.error(
+                'Error cargando las animaciones:',
+                error
+            );
+
+        }
+
+    },
+
+    undefined,
+
+    (error) => {
+
+        console.error(
+            'Error al cargar character.fbx:',
+            error
+        );
+
+    }
+
+);
+
+
+// ============================================================
+// CONTROLES DEL TECLADO
+// ============================================================
+
+window.addEventListener(
+    'keydown',
+
+    (event) => {
+
+        const keyboard = {
+
+            // 1 = Double Dagger
+            Digit1:
+                'dagger',
+
+            // 2 = Jumping
+            Digit2:
+                'jumping',
+
+            // 3 = Punching
+            Digit3:
+                'punching',
+
+            // 4 = Stand
+            Digit4:
+                'stand',
+
+            // 5 = Uppercut
+            Digit5:
+                'uppercut'
+
+        };
+
+
+        const animation =
+            keyboard[event.code];
+
+
+        if (animation) {
+
+            playAction(
+                animation
+            );
+
+        }
+
+    }
+
+);
+
+
+// ============================================================
+// CICLO PRINCIPAL
+// ============================================================
+
+function animate() {
+
+    // Tiempo transcurrido desde el frame anterior
+    const delta =
+        clock.getDelta();
+
+
+    // ========================================================
+    // ACTUALIZAR ANIMACIONES
+    // ========================================================
+    //
+    // Esto es lo que permite que la animación siga
+    // reproduciéndose continuamente.
+    // ========================================================
+
+    if (mixer) {
+
+        mixer.update(
+            delta
+        );
+
+    }
+
+
+    // Actualizar OrbitControls
+    controls.update();
+
+
+    // Render
+    renderer.render(
+        scene,
+        camera
+    );
+
+}
+
+
+// Ejecutar ciclo
+renderer.setAnimationLoop(
+    animate
+);
+
+
+// ============================================================
+// AJUSTE RESPONSIVE
+// ============================================================
+
+window.addEventListener(
+    'resize',
+
+    () => {
+
+        camera.aspect =
+            window.innerWidth /
+            window.innerHeight;
+
+
+        camera.updateProjectionMatrix();
+
+
+        renderer.setSize(
+            window.innerWidth,
+            window.innerHeight
+        );
+
+    }
+
+);
