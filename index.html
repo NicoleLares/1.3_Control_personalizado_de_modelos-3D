@@ -1,79 +1,264 @@
 <!DOCTYPE html>
-
 <html lang="es">
 
 <head>
 
-    <meta charset="UTF-8">
+  <meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Práctica 1.3 | Control personalizado de modelos 3D</title>
+  <title>
+    Práctica 1.3 | Guerrero Samurai 3D
+  </title>
 
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/css/styles.css">
 
-    <link rel="stylesheet" href="./assets/css/styles.css">
-
-
-    <script type="importmap">
-
-  {
-
-    "imports": {
-
-      "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
-
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
-
+  <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+        }
     }
-
-  }
-
-  </script>
+    </script>
 
 </head>
 
+
 <body>
 
-    <div id="scene-container"></div>
+  <!-- =====================================================
+         ESCENA 3D
+    ====================================================== -->
+
+  <div id="scene-container"></div>
 
 
-    <section class="control-panel card border-0 shadow-lg text-white p-3">
+  <!-- =====================================================
+         PANEL DE CONTROL
+    ====================================================== -->
 
-        <h1 class="h5 mb-2">Control personalizado de modelos 3D</h1>
+  <section class="control-panel">
 
-        <p class="small mb-2">Selecciona una animación con el teclado y mueve la cámara con el mouse.</p>
+    <div class="panel-decoration"></div>
 
-        <div class="d-flex flex-wrap gap-2 small">
 
-            <span><kbd class="key">1</kbd> Double Dagger</span>
+    <div class="panel-header">
 
-            <span><kbd class="key">2</kbd> Jumping</span>
+      <div class="japanese-symbol">
+        侍
+      </div>
 
-            <span><kbd class="key">3</kbd> Punching</span>
+      <div>
 
-            <span><kbd class="key">4</kbd> Stand</span>
+        <h1>
+          GUERRERO SAMURAI
+        </h1>
 
-            <span><kbd class="key">5</kbd> Uppercut</span>
+        <p>
+          Control de personaje 3D
+        </p>
 
-            <span><kbd class="key">6</kbd> Walk</span>
+      </div>
+
+    </div>
+
+
+    <div class="separator"></div>
+
+
+    <!-- ANIMACIONES -->
+
+    <div class="control-section">
+
+      <h2>
+        Animaciones
+      </h2>
+
+      <div class="animation-grid">
+
+        <div class="control-item">
+
+          <kbd>
+            1
+          </kbd>
+
+          <span>
+            Double Dagger
+          </span>
 
         </div>
 
-        <div class="mt-2">Animación: <span id="animation-name" class="badge text-bg-info">CARGANDO</span></div>
 
-    </section>
+        <div class="control-item">
+
+          <kbd>
+            2
+          </kbd>
+
+          <span>
+            Jumping
+          </span>
+
+        </div>
 
 
-    <footer class="app-footer text-center py-2 px-3">
+        <div class="control-item">
 
-        Programador: NOMBRE DEL ALUMNO · No. de control: XXXXXXXX · Desarrollo de soluciones en ambientes virtuales
+          <kbd>
+            3
+          </kbd>
 
-    </footer>
+          <span>
+            Punching
+          </span>
+
+        </div>
 
 
-    <script type="module" src="./assets/js/main.js"></script>
+        <div class="control-item">
+
+          <kbd>
+            4
+          </kbd>
+
+          <span>
+            Stand
+          </span>
+
+        </div>
+
+
+        <div class="control-item">
+
+          <kbd>
+            5
+          </kbd>
+
+          <span>
+            Uppercut
+          </span>
+
+        </div>
+
+
+        <div class="control-item">
+
+          <kbd>
+            6
+          </kbd>
+
+          <span>
+            Walk
+          </span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="separator"></div>
+
+
+    <!-- MOVIMIENTO -->
+
+    <div class="control-section">
+
+      <h2>
+        Movimiento
+      </h2>
+
+
+      <div class="arrows-container">
+
+        <div></div>
+
+        <kbd class="arrow-key">
+          ↑
+        </kbd>
+
+        <div></div>
+
+
+        <kbd class="arrow-key">
+          ←
+        </kbd>
+
+        <kbd class="arrow-key">
+          ↓
+        </kbd>
+
+        <kbd class="arrow-key">
+          →
+        </kbd>
+
+      </div>
+
+
+      <p class="movement-description">
+
+        Usa las flechas para caminar y girar.
+
+      </p>
+
+    </div>
+
+
+    <div class="separator"></div>
+
+
+    <!-- ANIMACIÓN ACTUAL -->
+
+    <div class="current-animation">
+
+      <span>
+        Movimiento actual
+      </span>
+
+      <strong id="animation-name">
+        CARGANDO
+      </strong>
+
+    </div>
+
+
+    <div class="mouse-info">
+
+      🖱️ Arrastra el mouse para mover la cámara
+
+    </div>
+
+  </section>
+
+
+  <!-- =====================================================
+         FOOTER
+    ====================================================== -->
+
+  <footer class="app-footer">
+
+    <span class="footer-symbol">
+      武士
+    </span>
+
+    <span>
+      Programador: NOMBRE DEL ALUMNO
+      · No. de control: XXXXXXXX
+      · Desarrollo de soluciones en ambientes virtuales
+    </span>
+
+  </footer>
+
+
+  <!-- =====================================================
+         JAVASCRIPT
+    ====================================================== -->
+
+  <script type="module" src="./assets/js/main.js"></script>
 
 </body>
 
