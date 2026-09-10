@@ -147,32 +147,66 @@ scene.add(grid);
 
 
 // ============================================================
-// VARIABLES
+// VARIABLES GENERALES
 // ============================================================
 
 const loader = new FBXLoader();
 
 const clock = new THREE.Clock();
 
-
-// Aquí se guardarán todas las animaciones
 const actions = {};
 
 
-// Modelo
 let model;
 
-
-// Controlador de animaciones
 let mixer;
 
-
-// Animación que se está reproduciendo actualmente
 let currentAction = null;
 
-
-// Nombre de la animación actual
 let currentAnimationName = null;
+
+
+// ============================================================
+// CONFIGURACIÓN DE MOVIMIENTO
+// ============================================================
+
+// Velocidad del personaje
+const MOVE_SPEED = 2.5;
+
+
+// Velocidad con la que gira
+const TURN_SPEED = 10;
+
+
+// Límite de movimiento dentro del suelo
+const MOVEMENT_LIMIT = 9;
+
+
+// Si el personaje camina de espaldas,
+// cambia 0 por Math.PI
+const MODEL_FORWARD_OFFSET = 0;
+
+
+// Dirección actual
+const moveDirection =
+    new THREE.Vector3();
+
+
+// ============================================================
+// ESTADO DE LAS FLECHAS
+// ============================================================
+
+const movementKeys = {
+
+    ArrowUp: false,
+
+    ArrowDown: false,
+
+    ArrowLeft: false,
+
+    ArrowRight: false
+
+};
 
 
 // ============================================================
@@ -194,13 +228,16 @@ const animationFiles = {
         './assets/models/animations/Stand.fbx',
 
     uppercut:
-        './assets/models/animations/Uppercut.fbx'
+        './assets/models/animations/Uppercut.fbx',
+
+    walk:
+        './assets/models/animations/Walk.fbx'
 
 };
 
 
 // ============================================================
-// NOMBRES QUE SE MOSTRARÁN EN PANTALLA
+// NOMBRES DE LAS ANIMACIONES
 // ============================================================
 
 const animationLabels = {
@@ -218,13 +255,16 @@ const animationLabels = {
         'STAND',
 
     uppercut:
-        'UPPERCUT'
+        'UPPERCUT',
+
+    walk:
+        'WALK'
 
 };
 
 
 // ============================================================
-// CARGAR ANIMACIÓN
+// CARGAR UNA ANIMACIÓN
 // ============================================================
 
 function loadAnimation(name, url) {
@@ -238,7 +278,8 @@ function loadAnimation(name, url) {
 
                 (fbx) => {
 
-                    // Verificamos que el archivo tenga animación
+                    // Verificamos que exista
+                    // al menos una animación
                     if (
                         !fbx.animations ||
                         fbx.animations.length === 0
@@ -255,20 +296,19 @@ function loadAnimation(name, url) {
                     }
 
 
-                    // Obtenemos el primer clip
+                    // Primer clip
                     const clip =
                         fbx.animations[0];
 
 
-                    // Creamos la acción
+                    // Crear acción
                     const action =
                         mixer.clipAction(clip);
 
 
-                    // ----------------------------------------------------
-                    // IMPORTANTE:
-                    // La animación se repetirá indefinidamente.
-                    // ----------------------------------------------------
+                    // ====================================================
+                    // REPETICIÓN CONTINUA
+                    // ====================================================
 
                     action.setLoop(
                         THREE.LoopRepeat,
@@ -284,13 +324,13 @@ function loadAnimation(name, url) {
                         true;
 
 
-                    // Guardamos la acción
+                    // Guardar
                     actions[name] =
                         action;
 
 
                     console.log(
-                        `Animación cargada correctamente: ${name}`
+                        `Animación cargada: ${name}`
                     );
 
 
@@ -303,7 +343,7 @@ function loadAnimation(name, url) {
                 (error) => {
 
                     console.error(
-                        `Error cargando la animación ${name}:`,
+                        `Error cargando ${name}:`,
                         error
                     );
 
@@ -320,7 +360,7 @@ function loadAnimation(name, url) {
 
 
 // ============================================================
-// CAMBIAR / REPRODUCIR ANIMACIÓN
+// CAMBIAR DE ANIMACIÓN
 // ============================================================
 
 function playAction(name) {
@@ -329,7 +369,6 @@ function playAction(name) {
         actions[name];
 
 
-    // Si no existe, salir
     if (!nextAction) {
 
         console.warn(
@@ -342,14 +381,15 @@ function playAction(name) {
 
 
     // ========================================================
-    // SI SE PRESIONA LA MISMA ANIMACIÓN
+    // SI YA ESTÁ REPRODUCIÉNDOSE
     // ========================================================
     //
-    // No hacemos reset.
+    // NO hacemos reset.
     //
-    // Esto significa que si presionas nuevamente la misma
-    // tecla, el movimiento NO comenzará desde cero.
-    // Continuará normalmente.
+    // Ejemplo:
+    //
+    // Walk -> flecha izquierda -> sigue Walk
+    //
     // ========================================================
 
     if (
@@ -382,7 +422,9 @@ function playAction(name) {
             name;
 
 
-        updateAnimationName(name);
+        updateAnimationName(
+            name
+        );
 
 
         return;
@@ -391,7 +433,7 @@ function playAction(name) {
 
 
     // ========================================================
-    // GUARDAMOS EL PROGRESO DE LA ANIMACIÓN ACTUAL
+    // OBTENER PROGRESO DE ANIMACIÓN ACTUAL
     // ========================================================
 
     const currentClip =
@@ -406,18 +448,21 @@ function playAction(name) {
     ) {
 
         progress =
+
             (
                 currentAction.time %
                 currentClip.duration
             )
+
             /
+
             currentClip.duration;
 
     }
 
 
     // ========================================================
-    // PREPARAMOS LA NUEVA ANIMACIÓN
+    // PREPARAR NUEVA ANIMACIÓN
     // ========================================================
 
     const nextClip =
@@ -441,40 +486,30 @@ function playAction(name) {
     );
 
 
-    // --------------------------------------------------------
-    // Intentamos mantener aproximadamente el mismo porcentaje
-    // del movimiento anterior.
-    //
-    // Esto ayuda a que la transición sea menos brusca.
-    // --------------------------------------------------------
-
+    // Mantener aproximadamente
+    // el mismo progreso
     nextAction.time =
+
         progress *
+
         nextClip.duration;
 
 
-    // Comenzamos la nueva animación
     nextAction.play();
 
 
     // ========================================================
     // TRANSICIÓN SUAVE
     // ========================================================
-    //
-    // Mezcla la animación anterior con la nueva durante
-    // 0.35 segundos.
-    //
-    // De esta forma NO se corta bruscamente el personaje.
-    // ========================================================
 
     nextAction.crossFadeFrom(
         currentAction,
-        0.35,
+        0.30,
         true
     );
 
 
-    // Guardamos la nueva acción como actual
+    // Nueva animación actual
     currentAction =
         nextAction;
 
@@ -483,14 +518,15 @@ function playAction(name) {
         name;
 
 
-    // Actualizamos texto en pantalla
-    updateAnimationName(name);
+    updateAnimationName(
+        name
+    );
 
 }
 
 
 // ============================================================
-// ACTUALIZAR NOMBRE DE ANIMACIÓN
+// ACTUALIZAR NOMBRE EN LA INTERFAZ
 // ============================================================
 
 function updateAnimationName(name) {
@@ -501,18 +537,215 @@ function updateAnimationName(name) {
         );
 
 
-    if (!element) return;
+    if (!element) {
+
+        return;
+
+    }
 
 
     element.textContent =
-        animationLabels[name] ||
+
+        animationLabels[name]
+
+        ||
+
         name.toUpperCase();
 
 }
 
 
 // ============================================================
-// CARGAR PERSONAJE
+// MOVIMIENTO DEL PERSONAJE
+// ============================================================
+
+function updateCharacterMovement(delta) {
+
+    if (!model) {
+
+        return;
+
+    }
+
+
+    // Reiniciar dirección
+    moveDirection.set(
+        0,
+        0,
+        0
+    );
+
+
+    // ========================================================
+    // IZQUIERDA
+    // ========================================================
+
+    if (
+        movementKeys.ArrowLeft
+    ) {
+
+        moveDirection.x -= 1;
+
+    }
+
+
+    // ========================================================
+    // DERECHA
+    // ========================================================
+
+    if (
+        movementKeys.ArrowRight
+    ) {
+
+        moveDirection.x += 1;
+
+    }
+
+
+    // ========================================================
+    // ADELANTE
+    // ========================================================
+
+    if (
+        movementKeys.ArrowUp
+    ) {
+
+        moveDirection.z -= 1;
+
+    }
+
+
+    // ========================================================
+    // ATRÁS
+    // ========================================================
+
+    if (
+        movementKeys.ArrowDown
+    ) {
+
+        moveDirection.z += 1;
+
+    }
+
+
+    // Si no hay flecha presionada,
+    // simplemente no desplazamos al personaje.
+    //
+    // MUY IMPORTANTE:
+    // aquí NO cambiamos su animación.
+    if (
+        moveDirection.lengthSq() === 0
+    ) {
+
+        return;
+
+    }
+
+
+    // Evitar mayor velocidad diagonal
+    moveDirection.normalize();
+
+
+    // ========================================================
+    // DESPLAZAR PERSONAJE
+    // ========================================================
+
+    model.position.x +=
+
+        moveDirection.x *
+
+        MOVE_SPEED *
+
+        delta;
+
+
+    model.position.z +=
+
+        moveDirection.z *
+
+        MOVE_SPEED *
+
+        delta;
+
+
+    // ========================================================
+    // LÍMITES DEL ESCENARIO
+    // ========================================================
+
+    model.position.x =
+
+        THREE.MathUtils.clamp(
+            model.position.x,
+            -MOVEMENT_LIMIT,
+            MOVEMENT_LIMIT
+        );
+
+
+    model.position.z =
+
+        THREE.MathUtils.clamp(
+            model.position.z,
+            -MOVEMENT_LIMIT,
+            MOVEMENT_LIMIT
+        );
+
+
+    // ========================================================
+    // GIRAR HACIA LA DIRECCIÓN DEL MOVIMIENTO
+    // ========================================================
+
+    const targetRotation =
+
+        Math.atan2(
+            moveDirection.x,
+            moveDirection.z
+        )
+
+        +
+
+        MODEL_FORWARD_OFFSET;
+
+
+    // Diferencia de ángulo
+    let rotationDifference =
+
+        targetRotation
+
+        -
+
+        model.rotation.y;
+
+
+    // Normalizar entre -PI y PI
+    rotationDifference =
+
+        Math.atan2(
+            Math.sin(
+                rotationDifference
+            ),
+            Math.cos(
+                rotationDifference
+            )
+        );
+
+
+    // Giro suave
+    model.rotation.y +=
+
+        rotationDifference
+
+        *
+
+        Math.min(
+            1,
+            TURN_SPEED * delta
+        );
+
+}
+
+
+// ============================================================
+// CARGAR MODELO PRINCIPAL
 // ============================================================
 
 loader.load(
@@ -521,18 +754,17 @@ loader.load(
 
     async (fbx) => {
 
-        // Guardamos modelo
         model =
             fbx;
 
 
-        // Tamaño
+        // Escala
         model.scale.setScalar(
             0.01
         );
 
 
-        // Posición
+        // Posición inicial
         model.position.set(
             0,
             0,
@@ -547,7 +779,9 @@ loader.load(
         model.traverse(
             (child) => {
 
-                if (child.isMesh) {
+                if (
+                    child.isMesh
+                ) {
 
                     child.castShadow =
                         true;
@@ -561,12 +795,13 @@ loader.load(
         );
 
 
-        // Agregamos a escena
-        scene.add(model);
+        scene.add(
+            model
+        );
 
 
         // ====================================================
-        // CREAMOS EL ANIMATION MIXER
+        // ANIMATION MIXER
         // ====================================================
 
         mixer =
@@ -576,7 +811,7 @@ loader.load(
 
 
         // ====================================================
-        // CARGAMOS TODAS LAS ANIMACIONES
+        // CARGAR TODAS LAS ANIMACIONES
         // ====================================================
 
         try {
@@ -584,7 +819,9 @@ loader.load(
             await Promise.all(
 
                 Object
-                    .entries(animationFiles)
+                    .entries(
+                        animationFiles
+                    )
                     .map(
 
                         ([name, url]) =>
@@ -607,10 +844,6 @@ loader.load(
             // =================================================
             // ANIMACIÓN INICIAL
             // =================================================
-            //
-            // Antes tenías "idle", pero no tienes Idle.fbx.
-            // Por eso usamos Stand.
-            // =================================================
 
             playAction(
                 'stand'
@@ -621,7 +854,7 @@ loader.load(
         catch (error) {
 
             console.error(
-                'Error cargando las animaciones:',
+                'Error cargando animaciones:',
                 error
             );
 
@@ -634,7 +867,7 @@ loader.load(
     (error) => {
 
         console.error(
-            'Error al cargar character.fbx:',
+            'Error cargando character.fbx:',
             error
         );
 
@@ -644,7 +877,7 @@ loader.load(
 
 
 // ============================================================
-// CONTROLES DEL TECLADO
+// TECLADO - KEYDOWN
 // ============================================================
 
 window.addEventListener(
@@ -652,27 +885,75 @@ window.addEventListener(
 
     (event) => {
 
+        // ====================================================
+        // FLECHAS
+        // ====================================================
+
+        if (
+            event.code in movementKeys
+        ) {
+
+            event.preventDefault();
+
+
+            // Activar movimiento
+            movementKeys[event.code] =
+                true;
+
+
+            // =================================================
+            // IMPORTANTE
+            // =================================================
+            //
+            // Las flechas hacen que el personaje camine.
+            //
+            // Si YA está en Walk:
+            // playAction detectará que es la misma acción
+            // y NO hará reset.
+            //
+            // Por lo tanto Walk continuará exactamente
+            // donde iba.
+            // =================================================
+
+            playAction(
+                'walk'
+            );
+
+
+            return;
+
+        }
+
+
+        // ====================================================
+        // NÚMEROS
+        // ====================================================
+
         const keyboard = {
 
-            // 1 = Double Dagger
+            // 1
             Digit1:
                 'dagger',
 
-            // 2 = Jumping
+            // 2
             Digit2:
                 'jumping',
 
-            // 3 = Punching
+            // 3
             Digit3:
                 'punching',
 
-            // 4 = Stand
+            // 4
             Digit4:
                 'stand',
 
-            // 5 = Uppercut
+            // 5
             Digit5:
-                'uppercut'
+                'uppercut',
+
+            // 6
+            Digit6:
+                'walk'
 
         };
 
@@ -681,7 +962,9 @@ window.addEventListener(
             keyboard[event.code];
 
 
-        if (animation) {
+        if (
+            animation
+        ) {
 
             playAction(
                 animation
@@ -695,25 +978,99 @@ window.addEventListener(
 
 
 // ============================================================
+// TECLADO - KEYUP
+// ============================================================
+
+window.addEventListener(
+    'keyup',
+
+    (event) => {
+
+        if (
+            event.code in movementKeys
+        ) {
+
+            event.preventDefault();
+
+
+            // Detenemos solamente
+            // el DESPLAZAMIENTO
+            movementKeys[event.code] =
+                false;
+
+
+            // =================================================
+            // IMPORTANTE
+            // =================================================
+            //
+            // NO usamos:
+            //
+            // playAction('stand');
+            //
+            // Por lo tanto, cuando soltamos la flecha:
+            //
+            // Walk continúa reproduciéndose.
+            //
+            // =================================================
+
+        }
+
+    }
+
+);
+
+
+// ============================================================
+// SI LA VENTANA PIERDE EL FOCO
+// ============================================================
+
+window.addEventListener(
+    'blur',
+
+    () => {
+
+        // Detener solamente
+        // el desplazamiento
+
+        movementKeys.ArrowUp =
+            false;
+
+        movementKeys.ArrowDown =
+            false;
+
+        movementKeys.ArrowLeft =
+            false;
+
+        movementKeys.ArrowRight =
+            false;
+
+
+        // NO cambiamos a Stand.
+        //
+        // La animación actual continúa.
+
+    }
+
+);
+
+
+// ============================================================
 // CICLO PRINCIPAL
 // ============================================================
 
 function animate() {
 
-    // Tiempo transcurrido desde el frame anterior
     const delta =
         clock.getDelta();
 
 
     // ========================================================
-    // ACTUALIZAR ANIMACIONES
-    // ========================================================
-    //
-    // Esto es lo que permite que la animación siga
-    // reproduciéndose continuamente.
+    // ACTUALIZAR ANIMACIÓN
     // ========================================================
 
-    if (mixer) {
+    if (
+        mixer
+    ) {
 
         mixer.update(
             delta
@@ -722,11 +1079,20 @@ function animate() {
     }
 
 
-    // Actualizar OrbitControls
+    // ========================================================
+    // ACTUALIZAR POSICIÓN
+    // ========================================================
+
+    updateCharacterMovement(
+        delta
+    );
+
+
+    // OrbitControls
     controls.update();
 
 
-    // Render
+    // Renderizar
     renderer.render(
         scene,
         camera
@@ -735,14 +1101,17 @@ function animate() {
 }
 
 
-// Ejecutar ciclo
+// ============================================================
+// INICIAR CICLO
+// ============================================================
+
 renderer.setAnimationLoop(
     animate
 );
 
 
 // ============================================================
-// AJUSTE RESPONSIVE
+// RESPONSIVE
 // ============================================================
 
 window.addEventListener(
@@ -751,7 +1120,11 @@ window.addEventListener(
     () => {
 
         camera.aspect =
-            window.innerWidth /
+
+            window.innerWidth
+
+            /
+
             window.innerHeight;
 
 
