@@ -29,16 +29,16 @@ body {
         sans-serif;
 
     background:
-        #0b0507;
+        #03050a;
 
     color:
-        #f4e9d8;
+        #e8edf4;
 
 }
 
 
 /* ==========================================================
-   ESCENA
+   ESCENA 3D
 ========================================================== */
 
 #scene-container {
@@ -77,41 +77,43 @@ canvas {
 
     padding: 20px;
 
-    border-radius: 6px;
+    border-radius: 8px;
 
 
     background:
 
         linear-gradient(145deg,
-            rgba(15, 7, 9, 0.96),
-            rgba(33, 10, 13, 0.92));
+            rgba(5, 8, 15, 0.96),
+            rgba(13, 17, 31, 0.93));
 
 
     border:
 
-        1px solid rgba(202, 151, 74, 0.45);
+        1px solid rgba(106, 122, 160, 0.35);
 
 
     border-left:
 
-        4px solid #9f2929;
+        4px solid #782b3c;
 
 
     box-shadow:
 
-        0 18px 45px rgba(0, 0, 0, 0.55),
+        0 20px 55px rgba(0, 0, 0, 0.72),
 
-        inset 0 0 40px rgba(110, 24, 28, 0.09);
+        inset 0 0 40px rgba(53, 63, 105, 0.08),
+
+        0 0 25px rgba(73, 40, 90, 0.10);
 
 
     backdrop-filter:
-        blur(13px);
+        blur(14px);
 
 }
 
 
 /* ==========================================================
-   DECORACIÓN SUPERIOR
+   LÍNEA SUPERIOR
 ========================================================== */
 
 .panel-decoration {
@@ -119,16 +121,19 @@ canvas {
     position: absolute;
 
     top: 0;
-    left: 22px;
-    right: 22px;
+    left: 25px;
+    right: 25px;
 
     height: 2px;
+
 
     background:
 
         linear-gradient(90deg,
             transparent,
-            #b98b44,
+            #76364b,
+            #717999,
+            #76364b,
             transparent);
 
 }
@@ -149,39 +154,43 @@ canvas {
 }
 
 
-.panel-header h1 {
+.title-container h1 {
 
     margin: 0;
 
-    font-size: 1.05rem;
+    font-size: 1.15rem;
 
-    letter-spacing: 0.14rem;
+    letter-spacing: 0.28rem;
 
     font-weight: 700;
 
     color:
-        #f2dfbd;
+        #e8edf4;
 
 }
 
 
-.panel-header p {
+.title-container p {
 
-    margin: 4px 0 0 0;
-
-    font-size: 0.76rem;
+    margin: 4px 0 0;
 
     color:
-        #ad9984;
+        #778094;
+
+    font-size:
+        0.73rem;
+
+    letter-spacing:
+        0.05rem;
 
 }
 
 
 /* ==========================================================
-   SÍMBOLO JAPONÉS
+   SÍMBOLO NINJA
 ========================================================== */
 
-.japanese-symbol {
+.ninja-symbol {
 
     display: flex;
 
@@ -190,8 +199,8 @@ canvas {
     align-items: center;
 
 
-    width: 54px;
-    height: 54px;
+    width: 56px;
+    height: 56px;
 
 
     border-radius: 50%;
@@ -202,28 +211,31 @@ canvas {
 
 
     font-size:
-        1.7rem;
+        1.9rem;
 
 
     color:
-        #f4e5c7;
+        #f0f2f7;
 
 
     background:
 
-        radial-gradient(circle,
-            #af3030,
-            #721719);
+        radial-gradient(circle at 40% 35%,
+            #872f47,
+            #32111d 55%,
+            #09070b);
 
 
     border:
 
-        1px solid #c99c54;
+        1px solid rgba(168, 96, 115, 0.65);
 
 
     box-shadow:
 
-        0 0 18px rgba(174, 43, 43, 0.32);
+        0 0 20px rgba(136, 38, 70, 0.35),
+
+        inset 0 0 12px rgba(255, 255, 255, 0.06);
 
 }
 
@@ -244,24 +256,24 @@ canvas {
 
         linear-gradient(90deg,
             transparent,
-            rgba(193, 142, 69, 0.6),
+            rgba(97, 107, 142, 0.5),
             transparent);
 
 }
 
 
 /* ==========================================================
-   SECCIONES
+   TÍTULOS
 ========================================================== */
 
 .control-section h2 {
 
     margin:
-        0 0 10px 0;
+        0 0 10px;
 
 
     font-size:
-        0.75rem;
+        0.72rem;
 
 
     text-transform:
@@ -269,17 +281,17 @@ canvas {
 
 
     letter-spacing:
-        0.13rem;
+        0.16rem;
 
 
     color:
-        #c89a55;
+        #919ab3;
 
 }
 
 
 /* ==========================================================
-   GRID DE ANIMACIONES
+   GRID ANIMACIONES
 ========================================================== */
 
 .animation-grid {
@@ -295,6 +307,10 @@ canvas {
 }
 
 
+/* ==========================================================
+   ITEM
+========================================================== */
+
 .control-item {
 
     display: flex;
@@ -305,32 +321,47 @@ canvas {
 
 
     padding:
-        6px 8px;
+        7px 8px;
 
 
     border-radius:
-        4px;
+        5px;
 
 
     background:
 
-        rgba(255,
-            255,
-            255,
-            0.025);
+        linear-gradient(145deg,
+            rgba(255, 255, 255, 0.025),
+            rgba(255, 255, 255, 0.008));
 
 
     border:
 
-        1px solid rgba(255, 255, 255, 0.045);
+        1px solid rgba(126, 137, 170, 0.09);
+
+
+    color:
+        #bdc3cf;
 
 
     font-size:
         0.75rem;
 
 
-    color:
-        #d9c7ae;
+    transition:
+        0.2s ease;
+
+}
+
+
+.control-item:hover {
+
+    background:
+        rgba(105, 43, 67, 0.15);
+
+
+    border-color:
+        rgba(151, 70, 94, 0.28);
 
 }
 
@@ -343,17 +374,17 @@ kbd {
 
     display: inline-flex;
 
-    justify-content: center;
-
     align-items: center;
+
+    justify-content: center;
 
 
     min-width:
-        27px;
+        28px;
 
 
     height:
-        27px;
+        28px;
 
 
     padding:
@@ -361,36 +392,39 @@ kbd {
 
 
     border-radius:
-        3px;
+        4px;
 
 
     color:
-        #f3dfb8;
+        #e3e7ef;
 
 
     background:
 
         linear-gradient(145deg,
-            #69181b,
-            #381013);
+            #282d3d,
+            #10131d);
 
 
     border:
 
-        1px solid #986137;
+        1px solid #4d566e;
+
+
+    border-bottom:
+
+        2px solid #1b1d29;
 
 
     box-shadow:
 
-        inset 0 -2px 0 rgba(0, 0, 0, 0.35);
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+
+        0 2px 5px rgba(0, 0, 0, 0.4);
 
 
     font-size:
         0.73rem;
-
-
-    font-weight:
-        600;
 
 }
 
@@ -404,7 +438,7 @@ kbd {
     display: grid;
 
     grid-template-columns:
-        repeat(3, 40px);
+        repeat(3, 42px);
 
 
     justify-content:
@@ -412,7 +446,7 @@ kbd {
 
 
     gap:
-        5px;
+        6px;
 
 }
 
@@ -420,26 +454,29 @@ kbd {
 .arrow-key {
 
     width:
-        40px;
+        42px;
 
     height:
-        36px;
+        38px;
 
 
     font-size:
-        1rem;
+        1.05rem;
+
+
+    color:
+        #f0f2f7;
 
 }
 
 
 /* ==========================================================
-   TEXTO MOVIMIENTO
+   DESCRIPCIÓN
 ========================================================== */
 
 .movement-description {
 
     margin:
-
         10px 0 0;
 
 
@@ -448,11 +485,11 @@ kbd {
 
 
     color:
-        #8f8175;
+        #666e80;
 
 
     font-size:
-        0.7rem;
+        0.68rem;
 
 }
 
@@ -475,20 +512,24 @@ kbd {
         15px;
 
 
-    font-size:
-        0.78rem;
-
-
     color:
-        #a89988;
+        #81899b;
+
+
+    font-size:
+        0.77rem;
 
 }
 
 
+/* ==========================================================
+   BADGE
+========================================================== */
+
 #animation-name {
 
     padding:
-        5px 10px;
+        6px 10px;
 
 
     border-radius:
@@ -496,23 +537,28 @@ kbd {
 
 
     color:
-        #f8e1b5;
+        #f1e9ec;
 
 
     background:
-        #8c2023;
+
+        linear-gradient(145deg,
+            #74283d,
+            #3f1424);
 
 
     border:
 
-        1px solid rgba(211,
-            157,
-            82,
-            0.6);
+        1px solid rgba(161, 77, 100, 0.55);
+
+
+    box-shadow:
+
+        0 0 12px rgba(118, 38, 65, 0.18);
 
 
     font-size:
-        0.68rem;
+        0.67rem;
 
 
     letter-spacing:
@@ -522,25 +568,88 @@ kbd {
 
 
 /* ==========================================================
-   MOUSE INFO
+   INFO MOUSE
 ========================================================== */
 
 .mouse-info {
 
     margin-top:
-        13px;
+        14px;
 
 
     text-align:
         center;
 
 
+    color:
+        #5c6475;
+
+
     font-size:
-        0.67rem;
+        0.66rem;
+
+}
+
+
+/* ==========================================================
+   MENSAJE NINJA
+========================================================== */
+
+.ninja-message {
+
+    margin-top:
+        15px;
+
+
+    padding-top:
+        11px;
+
+
+    text-align:
+        center;
+
+
+    border-top:
+
+        1px solid rgba(255, 255, 255, 0.035);
+
+
+    font-family:
+        serif;
+
+
+    font-size:
+        0.83rem;
 
 
     color:
-        #776e66;
+        #87364d;
+
+
+    letter-spacing:
+        0.12rem;
+
+}
+
+
+.ninja-message span {
+
+    color:
+        #555e70;
+
+
+    font-family:
+        "Segoe UI",
+        Arial,
+        sans-serif;
+
+
+    font-size:
+        0.6rem;
+
+
+    letter-spacing:
+        0.05rem;
 
 }
 
@@ -573,11 +682,11 @@ kbd {
         flex;
 
 
-    justify-content:
+    align-items:
         center;
 
 
-    align-items:
+    justify-content:
         center;
 
 
@@ -593,40 +702,41 @@ kbd {
         8px 20px;
 
 
-    font-size:
-        0.72rem;
-
-
-    color:
-        #a89884;
-
-
     background:
 
         linear-gradient(90deg,
-            rgba(8, 3, 4, 0.96),
-            rgba(32, 8, 10, 0.92),
-            rgba(8, 3, 4, 0.96));
+            rgba(3, 5, 10, 0.96),
+            rgba(13, 16, 27, 0.94),
+            rgba(3, 5, 10, 0.96));
 
 
     border-top:
 
-        1px solid rgba(175,
-            116,
-            51,
-            0.3);
+        1px solid rgba(81, 92, 121, 0.25);
 
 
     backdrop-filter:
         blur(12px);
 
+
+    color:
+        #686f7e;
+
+
+    font-size:
+        0.7rem;
+
 }
 
+
+/* ==========================================================
+   SÍMBOLO FOOTER
+========================================================== */
 
 .footer-symbol {
 
     color:
-        #ad3032;
+        #762b42;
 
 
     font-family:
@@ -634,7 +744,7 @@ kbd {
 
 
     font-size:
-        1.05rem;
+        1.15rem;
 
 }
 
@@ -667,21 +777,25 @@ kbd {
     }
 
 
-    .panel-header h1 {
+    .title-container h1 {
 
         font-size:
-            0.9rem;
+            0.95rem;
 
     }
 
 
-    .japanese-symbol {
+    .ninja-symbol {
 
         width:
-            45px;
+            46px;
 
         height:
-            45px;
+            46px;
+
+
+        font-size:
+            1.5rem;
 
     }
 
@@ -689,7 +803,8 @@ kbd {
     .app-footer {
 
         font-size:
-            0.58rem;
+            0.57rem;
+
 
         padding:
             6px 10px;

@@ -18,7 +18,7 @@ const scene =
 
 
 const BACKGROUND_COLOR =
-    0x16080c;
+    0x050913;
 
 
 scene.background =
@@ -33,7 +33,7 @@ scene.background =
 
 scene.fog =
     new THREE.FogExp2(
-        0x2b1115,
+        0x0a1020,
         0.012
     );
 
@@ -71,8 +71,7 @@ camera.position.set(
 const renderer =
     new THREE.WebGLRenderer({
 
-        antialias:
-            true
+        antialias: true
 
     });
 
@@ -88,11 +87,8 @@ renderer.setPixelRatio(
 
 
 renderer.setSize(
-
     window.innerWidth,
-
     window.innerHeight
-
 );
 
 
@@ -113,29 +109,22 @@ renderer.toneMapping =
 
 
 renderer.toneMappingExposure =
-    1.15;
+    1.0;
 
 
 document
-    .getElementById(
-        'scene-container'
-    )
-    .appendChild(
-        renderer.domElement
-    );
+    .getElementById('scene-container')
+    .appendChild(renderer.domElement);
 
 
 // ============================================================
-// CÁMARA - ORBIT CONTROLS
+// CONTROLES DE CÁMARA
 // ============================================================
 
 const controls =
     new OrbitControls(
-
         camera,
-
         renderer.domElement
-
     );
 
 
@@ -167,33 +156,24 @@ controls.maxDistance =
 
 
 // ============================================================
-// CREAR CIELO SAMURAI PROCEDURAL
+// CIELO NINJA PROCEDURAL
 // ============================================================
 
-function createSamuraiSky() {
+function createNinjaSky() {
 
     const canvas =
-        document.createElement(
-            'canvas'
-        );
+        document.createElement('canvas');
 
 
-    canvas.width =
-        2048;
-
-
-    canvas.height =
-        1024;
-
+    canvas.width = 2048;
+    canvas.height = 1024;
 
     const ctx =
-        canvas.getContext(
-            '2d'
-        );
+        canvas.getContext('2d');
 
 
     // ========================================================
-    // CIELO
+    // CIELO AZUL-NEGRO
     // ========================================================
 
     const gradient =
@@ -205,221 +185,131 @@ function createSamuraiSky() {
         );
 
 
-    gradient.addColorStop(
-        0,
-        '#080710'
-    );
+    gradient.addColorStop(0.00, '#02040a');
+    gradient.addColorStop(0.18, '#050913');
+    gradient.addColorStop(0.42, '#0a1223');
+    gradient.addColorStop(0.68, '#131f35');
+    gradient.addColorStop(0.86, '#0d1729');
+    gradient.addColorStop(1.00, '#060b14');
 
-
-    gradient.addColorStop(
-        0.24,
-        '#17101e'
-    );
-
-
-    gradient.addColorStop(
-        0.48,
-        '#441522'
-    );
-
-
-    gradient.addColorStop(
-        0.68,
-        '#852521'
-    );
-
-
-    gradient.addColorStop(
-        0.82,
-        '#c25930'
-    );
-
-
-    gradient.addColorStop(
-        1,
-        '#291116'
-    );
-
-
-    ctx.fillStyle =
-        gradient;
-
-
-    ctx.fillRect(
-
-        0,
-        0,
-
-        canvas.width,
-
-        canvas.height
-
-    );
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 
     // ========================================================
-    // RESPLANDOR
+    // ESTRELLAS SUAVES
     // ========================================================
 
-    const sunX =
-        canvas.width *
-        0.5;
+    for (let i = 0; i < 280; i++) {
+
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * (canvas.height * 0.72);
+        const r = Math.random() * 1.4 + 0.2;
+        const alpha = 0.18 + Math.random() * 0.45;
+
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(210, 225, 255, ${alpha})`;
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+    }
 
 
-    const sunY =
-        canvas.height *
-        0.57;
+    // ========================================================
+    // LUNA LLENA ENORME
+    // ========================================================
 
+    const moonX =
+        canvas.width * 0.53;
 
-    const glow =
+    const moonY =
+        canvas.height * 0.30;
+
+    const moonGlow =
         ctx.createRadialGradient(
-
-            sunX,
-            sunY,
+            moonX,
+            moonY,
             20,
-
-            sunX,
-            sunY,
-            330
-
+            moonX,
+            moonY,
+            250
         );
 
 
-    glow.addColorStop(
-        0,
-        'rgba(255,210,135,0.75)'
-    );
+    moonGlow.addColorStop(0, 'rgba(245, 248, 255, 0.95)');
+    moonGlow.addColorStop(0.28, 'rgba(200, 220, 255, 0.35)');
+    moonGlow.addColorStop(0.60, 'rgba(140, 170, 255, 0.12)');
+    moonGlow.addColorStop(1, 'rgba(140, 170, 255, 0.0)');
 
-
-    glow.addColorStop(
-        0.35,
-        'rgba(255,110,70,0.30)'
-    );
-
-
-    glow.addColorStop(
-        1,
-        'rgba(255,70,40,0)'
-    );
-
-
-    ctx.fillStyle =
-        glow;
-
-
-    ctx.fillRect(
-
-        sunX - 350,
-
-        sunY - 350,
-
-        700,
-
-        700
-
-    );
-
-
-    // ========================================================
-    // SOL JAPONÉS
-    // ========================================================
-
+    ctx.fillStyle = moonGlow;
     ctx.beginPath();
-
-
-    ctx.arc(
-
-        sunX,
-
-        sunY,
-
-        115,
-
-        0,
-
-        Math.PI * 2
-
-    );
-
-
-    ctx.fillStyle =
-        '#ffb067';
-
-
+    ctx.arc(moonX, moonY, 250, 0, Math.PI * 2);
     ctx.fill();
 
 
+    ctx.beginPath();
+    ctx.fillStyle = '#eef3ff';
+    ctx.arc(moonX, moonY, 105, 0, Math.PI * 2);
+    ctx.fill();
+
+
+    // sombras suaves / cráteres
+    ctx.fillStyle = 'rgba(185, 198, 218, 0.35)';
+
+    const craters = [
+        [moonX - 30, moonY - 10, 16],
+        [moonX + 24, moonY + 10, 12],
+        [moonX - 5, moonY + 30, 10],
+        [moonX + 35, moonY - 28, 8],
+        [moonX - 42, moonY + 35, 9]
+    ];
+
+    craters.forEach(([x, y, r]) => {
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+
     // ========================================================
-    // NUBES
+    // NUBES NOCTURNAS
     // ========================================================
 
-    for (
-        let i = 0;
-        i < 22;
-        i++
-    ) {
+    for (let i = 0; i < 24; i++) {
 
-        const x =
-            Math.random() *
-            canvas.width;
-
-
-        const y =
-            canvas.height *
-            (
-                0.47 +
-                Math.random() *
-                0.25
-            );
-
-
-        const width =
-            120 +
-            Math.random() *
-            280;
-
-
-        const height =
-            10 +
-            Math.random() *
-            35;
-
+        const x = Math.random() * canvas.width;
+        const y = canvas.height * (0.14 + Math.random() * 0.40);
+        const w = 140 + Math.random() * 320;
+        const h = 18 + Math.random() * 42;
 
         ctx.fillStyle =
-
-            `rgba(
-                255,
-                190,
-                150,
-                ${0.025 +
-            Math.random() *
-            0.04
-            }
-            )`;
-
+            `rgba(38, 52, 82, ${0.10 + Math.random() * 0.08})`;
 
         ctx.beginPath();
-
-
         ctx.ellipse(
-
             x,
             y,
-
-            width,
-            height,
-
+            w,
+            h,
             0,
-
             0,
-
             Math.PI * 2
-
         );
-
-
         ctx.fill();
+    }
 
+
+    // nube frente a la luna para dar dramatismo
+    for (let i = 0; i < 7; i++) {
+
+        const x = moonX - 180 + i * 55;
+        const y = moonY + 10 + Math.sin(i * 0.8) * 10;
+        const w = 80 + Math.random() * 40;
+        const h = 20 + Math.random() * 10;
+
+        ctx.fillStyle = 'rgba(42, 56, 86, 0.18)';
+        ctx.beginPath();
+        ctx.ellipse(x, y, w, h, 0, 0, Math.PI * 2);
+        ctx.fill();
     }
 
 
@@ -427,159 +317,45 @@ function createSamuraiSky() {
     // MONTAÑAS LEJANAS
     // ========================================================
 
-    ctx.fillStyle =
-        '#241016';
-
-
+    ctx.fillStyle = '#0a0e16';
     ctx.beginPath();
+    ctx.moveTo(0, canvas.height * 0.77);
 
-
-    ctx.moveTo(
-        0,
-        canvas.height *
-        0.76
-    );
-
-
-    for (
-        let x = 0;
-        x <= canvas.width;
-        x += 120
-    ) {
+    for (let x = 0; x <= canvas.width; x += 120) {
 
         const peak =
+            canvas.height * (0.60 + Math.random() * 0.10);
 
-            canvas.height *
-
-            (
-                0.58 +
-                Math.random() *
-                0.12
-            );
-
-
-        ctx.lineTo(
-
-            x + 60,
-
-            peak
-
-        );
-
-
-        ctx.lineTo(
-
-            x + 120,
-
-            canvas.height *
-            0.76
-
-        );
-
+        ctx.lineTo(x + 60, peak);
+        ctx.lineTo(x + 120, canvas.height * 0.77);
     }
 
-
-    ctx.lineTo(
-
-        canvas.width,
-
-        canvas.height
-
-    );
-
-
-    ctx.lineTo(
-
-        0,
-
-        canvas.height
-
-    );
-
-
+    ctx.lineTo(canvas.width, canvas.height);
+    ctx.lineTo(0, canvas.height);
     ctx.closePath();
-
-
     ctx.fill();
 
 
     // ========================================================
-    // MONTAÑAS CERCANAS
+    // COLINAS CERCANAS
     // ========================================================
 
-    ctx.fillStyle =
-        '#10090c';
-
-
+    ctx.fillStyle = '#04060c';
     ctx.beginPath();
+    ctx.moveTo(0, canvas.height * 0.84);
 
-
-    ctx.moveTo(
-        0,
-        canvas.height *
-        0.82
-    );
-
-
-    for (
-        let x = 0;
-        x <= canvas.width;
-        x += 95
-    ) {
+    for (let x = 0; x <= canvas.width; x += 95) {
 
         const peak =
+            canvas.height * (0.70 + Math.random() * 0.08);
 
-            canvas.height *
-
-            (
-                0.69 +
-                Math.random() *
-                0.08
-            );
-
-
-        ctx.lineTo(
-
-            x + 48,
-
-            peak
-
-        );
-
-
-        ctx.lineTo(
-
-            x + 95,
-
-            canvas.height *
-            0.82
-
-        );
-
+        ctx.lineTo(x + 48, peak);
+        ctx.lineTo(x + 95, canvas.height * 0.84);
     }
 
-
-    ctx.lineTo(
-
-        canvas.width,
-
-        canvas.height
-
-    );
-
-
-    ctx.lineTo(
-
-        0,
-
-        canvas.height
-
-    );
-
-
+    ctx.lineTo(canvas.width, canvas.height);
+    ctx.lineTo(0, canvas.height);
     ctx.closePath();
-
-
     ctx.fill();
 
 
@@ -588,66 +364,26 @@ function createSamuraiSky() {
     // ========================================================
 
     const toriiX =
-        canvas.width *
-        0.68;
-
+        canvas.width * 0.72;
 
     const toriiY =
-        canvas.height *
-        0.76;
+        canvas.height * 0.79;
 
+    ctx.fillStyle = '#020305';
 
-    ctx.fillStyle =
-        '#080507';
-
-
-    // columnas
-    ctx.fillRect(
-        toriiX - 60,
-        toriiY - 120,
-        14,
-        125
-    );
-
-
-    ctx.fillRect(
-        toriiX + 46,
-        toriiY - 120,
-        14,
-        125
-    );
-
-
-    // travesaño
-    ctx.fillRect(
-        toriiX - 90,
-        toriiY - 125,
-        180,
-        13
-    );
-
-
-    // techo
-    ctx.fillRect(
-        toriiX - 110,
-        toriiY - 145,
-        220,
-        12
-    );
+    ctx.fillRect(toriiX - 50, toriiY - 100, 12, 105);
+    ctx.fillRect(toriiX + 38, toriiY - 100, 12, 105);
+    ctx.fillRect(toriiX - 78, toriiY - 104, 156, 10);
+    ctx.fillRect(toriiX - 92, toriiY - 122, 184, 12);
 
 
     const texture =
-        new THREE.CanvasTexture(
-            canvas
-        );
-
+        new THREE.CanvasTexture(canvas);
 
     texture.colorSpace =
         THREE.SRGBColorSpace;
 
-
     return texture;
-
 }
 
 
@@ -655,8 +391,8 @@ function createSamuraiSky() {
 // DOMO DEL CIELO
 // ============================================================
 
-const samuraiSky =
-    createSamuraiSky();
+const ninjaSky =
+    createNinjaSky();
 
 
 const skyDome =
@@ -670,23 +406,16 @@ const skyDome =
 
         new THREE.MeshBasicMaterial({
 
-            map:
-                samuraiSky,
-
-            side:
-                THREE.BackSide,
-
-            fog:
-                false
+            map: ninjaSky,
+            side: THREE.BackSide,
+            fog: false
 
         })
 
     );
 
 
-scene.add(
-    skyDome
-);
+scene.add(skyDome);
 
 
 // ============================================================
@@ -696,103 +425,52 @@ scene.add(
 function createGroundTexture() {
 
     const canvas =
-        document.createElement(
-            'canvas'
-        );
+        document.createElement('canvas');
 
 
-    canvas.width =
-        1024;
-
-
-    canvas.height =
-        1024;
-
+    canvas.width = 1024;
+    canvas.height = 1024;
 
     const ctx =
-        canvas.getContext(
-            '2d'
+        canvas.getContext('2d');
+
+
+    // ========================================================
+    // BASE OSCURA
+    // ========================================================
+
+    const gradient =
+        ctx.createLinearGradient(
+            0,
+            0,
+            0,
+            canvas.height
         );
 
+    gradient.addColorStop(0, '#16181e');
+    gradient.addColorStop(0.5, '#23262d');
+    gradient.addColorStop(1, '#15181d');
 
-    // ========================================================
-    // BASE
-    // ========================================================
-
-    ctx.fillStyle =
-        '#35231a';
-
-
-    ctx.fillRect(
-
-        0,
-        0,
-
-        canvas.width,
-        canvas.height
-
-    );
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 
     // ========================================================
-    // VARIACIÓN DE TIERRA
+    // GRANULADO
     // ========================================================
 
-    for (
-        let i = 0;
-        i < 9000;
-        i++
-    ) {
+    for (let i = 0; i < 9000; i++) {
 
-        const x =
-            Math.random() *
-            canvas.width;
-
-
-        const y =
-            Math.random() *
-            canvas.height;
-
-
-        const size =
-            1 +
-            Math.random() *
-            4;
-
-
-        const brightness =
-            30 +
-            Math.floor(
-                Math.random() *
-                35
-            );
-
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const size = 1 + Math.random() * 3.5;
+        const value = 30 + Math.floor(Math.random() * 50);
+        const alpha = 0.03 + Math.random() * 0.10;
 
         ctx.fillStyle =
+            `rgba(${value}, ${value + 4}, ${value + 8}, ${alpha})`;
 
-            `rgba(
-                ${brightness + 25
-            },
-                ${brightness + 10
-            },
-                ${brightness},
-                ${0.04 +
-            Math.random() *
-            0.10
-            }
-            )`;
-
-
-        ctx.fillRect(
-
-            x,
-            y,
-
-            size,
-            size
-
-        );
-
+        ctx.fillRect(x, y, size, size);
     }
 
 
@@ -800,186 +478,77 @@ function createGroundTexture() {
     // PIEDRAS
     // ========================================================
 
-    for (
-        let i = 0;
-        i < 100;
-        i++
-    ) {
+    for (let i = 0; i < 90; i++) {
 
-        const x =
-            Math.random() *
-            canvas.width;
-
-
-        const y =
-            Math.random() *
-            canvas.height;
-
-
-        const rx =
-            4 +
-            Math.random() *
-            10;
-
-
-        const ry =
-            2 +
-            Math.random() *
-            6;
-
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const rx = 3 + Math.random() * 9;
+        const ry = 2 + Math.random() * 5;
 
         ctx.fillStyle =
-
-            `rgba(
-                70,
-                62,
-                54,
-                ${0.2 +
-            Math.random() *
-            0.25
-            }
-            )`;
-
+            `rgba(70, 76, 86, ${0.15 + Math.random() * 0.25})`;
 
         ctx.beginPath();
-
-
         ctx.ellipse(
-
             x,
             y,
-
             rx,
             ry,
-
-            Math.random() *
-            Math.PI,
-
+            Math.random() * Math.PI,
             0,
-
             Math.PI * 2
-
         );
-
-
         ctx.fill();
-
     }
 
 
     // ========================================================
-    // LÍNEAS DE ARENA
+    // SURCOS SUAVES
     // ========================================================
 
-    ctx.lineWidth =
-        1.2;
+    ctx.lineWidth = 1.1;
 
-
-    for (
-        let y = 0;
-        y < canvas.height;
-        y += 24
-    ) {
+    for (let y = 0; y < canvas.height; y += 22) {
 
         ctx.strokeStyle =
-            'rgba(210,170,110,0.055)';
-
+            'rgba(120, 140, 180, 0.045)';
 
         ctx.beginPath();
 
-
-        for (
-            let x = 0;
-            x <= canvas.width;
-            x += 12
-        ) {
+        for (let x = 0; x <= canvas.width; x += 12) {
 
             const wave =
+                Math.sin((x * 0.018) + (y * 0.022)) * 2.3;
 
-                Math.sin(
-
-                    x *
-                    0.018
-
-                    +
-
-                    y *
-                    0.025
-
-                )
-
-                *
-
-                2.5;
-
-
-            if (
-                x === 0
-            ) {
-
-                ctx.moveTo(
-
-                    x,
-
-                    y + wave
-
-                );
-
+            if (x === 0) {
+                ctx.moveTo(x, y + wave);
+            } else {
+                ctx.lineTo(x, y + wave);
             }
-
-            else {
-
-                ctx.lineTo(
-
-                    x,
-
-                    y + wave
-
-                );
-
-            }
-
         }
 
-
         ctx.stroke();
-
     }
 
 
     const texture =
-        new THREE.CanvasTexture(
-            canvas
-        );
-
+        new THREE.CanvasTexture(canvas);
 
     texture.wrapS =
         THREE.RepeatWrapping;
 
-
     texture.wrapT =
         THREE.RepeatWrapping;
 
-
-    texture.repeat.set(
-        40,
-        40
-    );
-
+    texture.repeat.set(40, 40);
 
     texture.colorSpace =
         THREE.SRGBColorSpace;
 
-
     texture.anisotropy =
-
-        renderer
-            .capabilities
-            .getMaxAnisotropy();
-
+        renderer.capabilities.getMaxAnisotropy();
 
     return texture;
-
 }
 
 
@@ -990,102 +559,47 @@ function createGroundTexture() {
 function createGroundBump() {
 
     const canvas =
-        document.createElement(
-            'canvas'
-        );
+        document.createElement('canvas');
 
 
-    canvas.width =
-        512;
-
-
-    canvas.height =
-        512;
-
+    canvas.width = 512;
+    canvas.height = 512;
 
     const ctx =
-        canvas.getContext(
-            '2d'
-        );
+        canvas.getContext('2d');
 
 
-    ctx.fillStyle =
-        '#777777';
+    ctx.fillStyle = '#777777';
+    ctx.fillRect(0, 0, 512, 512);
 
-
-    ctx.fillRect(
-        0,
-        0,
-        512,
-        512
-    );
-
-
-    for (
-        let i = 0;
-        i < 12000;
-        i++
-    ) {
+    for (let i = 0; i < 12000; i++) {
 
         const value =
-            90 +
-            Math.floor(
-                Math.random() *
-                85
-            );
-
+            92 + Math.floor(Math.random() * 70);
 
         ctx.fillStyle =
-            `rgb(
-                ${value},
-                ${value},
-                ${value}
-            )`;
-
+            `rgb(${value}, ${value}, ${value})`;
 
         ctx.fillRect(
-
-            Math.random() *
-            512,
-
-            Math.random() *
-            512,
-
-            1 +
-            Math.random() *
-            2,
-
-            1 +
-            Math.random() *
-            2
-
+            Math.random() * 512,
+            Math.random() * 512,
+            1 + Math.random() * 2,
+            1 + Math.random() * 2
         );
-
     }
 
-
     const texture =
-        new THREE.CanvasTexture(
-            canvas
-        );
-
+        new THREE.CanvasTexture(canvas);
 
     texture.wrapS =
         THREE.RepeatWrapping;
 
-
     texture.wrapT =
         THREE.RepeatWrapping;
 
-
-    texture.repeat.set(
-        80,
-        80
-    );
-
+    texture.repeat.set(80, 80);
 
     return texture;
-
 }
 
 
@@ -1096,18 +610,14 @@ function createGroundBump() {
 const FLOOR_SIZE =
     160;
 
-
 const FLOOR_RECENTER_STEP =
     20;
-
 
 const groundTexture =
     createGroundTexture();
 
-
 const groundBump =
     createGroundBump();
-
 
 const floor =
     new THREE.Mesh(
@@ -1119,20 +629,11 @@ const floor =
 
         new THREE.MeshStandardMaterial({
 
-            map:
-                groundTexture,
-
-            bumpMap:
-                groundBump,
-
-            bumpScale:
-                0.12,
-
-            roughness:
-                0.95,
-
-            metalness:
-                0.02
+            map: groundTexture,
+            bumpMap: groundBump,
+            bumpScale: 0.12,
+            roughness: 0.96,
+            metalness: 0.02
 
         })
 
@@ -1142,14 +643,10 @@ const floor =
 floor.rotation.x =
     -Math.PI / 2;
 
-
 floor.receiveShadow =
     true;
 
-
-scene.add(
-    floor
-);
+scene.add(floor);
 
 
 // ============================================================
@@ -1158,195 +655,164 @@ scene.add(
 
 const hemiLight =
     new THREE.HemisphereLight(
-
-        0xffcfaa,
-
-        0x1b0a0d,
-
-        2.2
-
+        0xbfd6ff,
+        0x080b12,
+        1.8
     );
 
-
-scene.add(
-    hemiLight
-);
+scene.add(hemiLight);
 
 
+// luz principal tipo luna
 const mainLight =
     new THREE.DirectionalLight(
-
-        0xffc187,
-
-        3.2
-
+        0xc8dcff,
+        2.6
     );
 
+mainLight.position.set(8, 12, 7);
+mainLight.castShadow = true;
+mainLight.shadow.mapSize.set(2048, 2048);
 
-mainLight.position.set(
-    8,
-    12,
-    7
-);
-
-
-mainLight.castShadow =
-    true;
+scene.add(mainLight);
 
 
-mainLight.shadow.mapSize.set(
-    2048,
-    2048
-);
-
-
-scene.add(
-    mainLight
-);
-
-
-// Luz rojiza lateral
-
-const redLight =
+// luz tenue azul lateral
+const blueLight =
     new THREE.PointLight(
-
-        0xc33131,
-
-        1.5,
-
-        35
-
+        0x507cff,
+        0.8,
+        40
     );
 
-
-redLight.position.set(
-    -7,
-    4,
-    -6
-);
-
-
-scene.add(
-    redLight
-);
+blueLight.position.set(-8, 5, -8);
+scene.add(blueLight);
 
 
 // ============================================================
-// PÉTALOS DE SAKURA
+// TEXTURA DE HOJA
 // ============================================================
 
-const PETAL_COUNT =
-    350;
+function createLeafTexture() {
 
+    const canvas =
+        document.createElement('canvas');
 
-const petalPositions =
-    new Float32Array(
-        PETAL_COUNT *
-        3
-    );
+    canvas.width = 64;
+    canvas.height = 64;
 
+    const ctx =
+        canvas.getContext('2d');
 
-const petalSpeeds =
-    [];
+    ctx.clearRect(0, 0, 64, 64);
 
+    ctx.save();
+    ctx.translate(32, 32);
+    ctx.rotate(-0.35);
 
-for (
-    let i = 0;
-    i < PETAL_COUNT;
-    i++
-) {
+    const gradient =
+        ctx.createLinearGradient(-12, -16, 14, 18);
 
-    const index =
-        i * 3;
+    gradient.addColorStop(0.00, '#8a9a44');
+    gradient.addColorStop(0.50, '#b58f3c');
+    gradient.addColorStop(1.00, '#755425');
 
+    ctx.fillStyle = gradient;
 
-    petalPositions[index] =
-        (
-            Math.random() -
-            0.5
-        ) * 45;
+    ctx.beginPath();
+    ctx.moveTo(0, -17);
+    ctx.bezierCurveTo(12, -12, 16, -2, 11, 10);
+    ctx.bezierCurveTo(8, 16, 3, 19, 0, 21);
+    ctx.bezierCurveTo(-4, 18, -10, 12, -12, 4);
+    ctx.bezierCurveTo(-14, -5, -10, -13, 0, -17);
+    ctx.closePath();
+    ctx.fill();
 
+    ctx.strokeStyle = 'rgba(75, 56, 24, 0.75)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-1, -14);
+    ctx.lineTo(1, 16);
+    ctx.stroke();
 
-    petalPositions[
-        index + 1
-    ] =
-        Math.random() *
-        12;
+    ctx.restore();
 
+    const texture =
+        new THREE.CanvasTexture(canvas);
 
-    petalPositions[
-        index + 2
-    ] =
-        (
-            Math.random() -
-            0.5
-        ) * 45;
+    texture.colorSpace =
+        THREE.SRGBColorSpace;
 
-
-    petalSpeeds.push(
-
-        0.25 +
-        Math.random() *
-        0.45
-
-    );
-
+    return texture;
 }
 
 
-const petalGeometry =
+// ============================================================
+// HOJAS FLOTANDO
+// ============================================================
+
+const LEAF_COUNT =
+    260;
+
+const leafPositions =
+    new Float32Array(LEAF_COUNT * 3);
+
+const leafSpeeds = [];
+const leafDrift = [];
+
+for (let i = 0; i < LEAF_COUNT; i++) {
+
+    const index = i * 3;
+
+    leafPositions[index] =
+        (Math.random() - 0.5) * 48;
+
+    leafPositions[index + 1] =
+        Math.random() * 12;
+
+    leafPositions[index + 2] =
+        (Math.random() - 0.5) * 48;
+
+    leafSpeeds.push(
+        0.20 + Math.random() * 0.38
+    );
+
+    leafDrift.push(
+        0.25 + Math.random() * 0.75
+    );
+}
+
+const leafGeometry =
     new THREE.BufferGeometry();
 
-
-petalGeometry.setAttribute(
-
+leafGeometry.setAttribute(
     'position',
-
     new THREE.BufferAttribute(
-
-        petalPositions,
-
+        leafPositions,
         3
-
     )
-
 );
 
-
-const petalMaterial =
+const leafMaterial =
     new THREE.PointsMaterial({
 
-        color:
-            0xffa7b8,
-
-        size:
-            0.055,
-
-        transparent:
-            true,
-
-        opacity:
-            0.8,
-
-        depthWrite:
-            false
+        map: createLeafTexture(),
+        size: 0.24,
+        transparent: true,
+        opacity: 0.90,
+        depthWrite: false,
+        alphaTest: 0.15,
+        color: 0xffffff
 
     });
 
-
-const petals =
+const leaves =
     new THREE.Points(
-
-        petalGeometry,
-
-        petalMaterial
-
+        leafGeometry,
+        leafMaterial
     );
 
-
-scene.add(
-    petals
-);
+scene.add(leaves);
 
 
 // ============================================================
@@ -1356,26 +822,15 @@ scene.add(
 const loader =
     new FBXLoader();
 
-
 const clock =
     new THREE.Clock();
 
-
 const actions = {};
 
-
 let model;
-
-
 let mixer;
-
-
-let currentAction =
-    null;
-
-
-let currentAnimationName =
-    null;
+let currentAction = null;
+let currentAnimationName = null;
 
 
 // ============================================================
@@ -1385,20 +840,16 @@ let currentAnimationName =
 const MOVE_SPEED =
     2.5;
 
-
 const TURN_SPEED =
     2.2;
 
-
 let heading =
     Math.PI;
-
 
 // Si camina mirando hacia atrás,
 // cambia a Math.PI.
 const MODEL_FORWARD_OFFSET =
     0;
-
 
 const forwardDirection =
     new THREE.Vector3();
@@ -1410,17 +861,10 @@ const forwardDirection =
 
 const movementKeys = {
 
-    ArrowUp:
-        false,
-
-    ArrowDown:
-        false,
-
-    ArrowLeft:
-        false,
-
-    ArrowRight:
-        false
+    ArrowUp: false,
+    ArrowDown: false,
+    ArrowLeft: false,
+    ArrowRight: false
 
 };
 
@@ -1479,117 +923,66 @@ const animationLabels = {
 // CARGAR ANIMACIÓN
 // ============================================================
 
-function loadAnimation(
-    name,
-    url
-) {
+function loadAnimation(name, url) {
 
-    return new Promise(
+    return new Promise((resolve, reject) => {
 
-        (
-            resolve,
-            reject
-        ) => {
+        loader.load(
+            url,
+            (fbx) => {
 
-            loader.load(
+                if (
+                    !fbx.animations ||
+                    fbx.animations.length === 0
+                ) {
 
-                url,
-
-                (fbx) => {
-
-                    if (
-
-                        !fbx.animations
-
-                        ||
-
-                        fbx.animations.length ===
-                        0
-
-                    ) {
-
-                        console.warn(
-
-                            `El archivo ${name} no contiene animaciones.`
-
-                        );
-
-
-                        resolve();
-
-
-                        return;
-
-                    }
-
-
-                    const clip =
-                        fbx.animations[0];
-
-
-                    const action =
-                        mixer.clipAction(
-                            clip
-                        );
-
-
-                    action.setLoop(
-
-                        THREE.LoopRepeat,
-
-                        Infinity
-
+                    console.warn(
+                        `El archivo ${name} no contiene animaciones.`
                     );
-
-
-                    action.clampWhenFinished =
-                        false;
-
-
-                    action.enabled =
-                        true;
-
-
-                    actions[name] =
-                        action;
-
-
-                    console.log(
-
-                        `Animación cargada: ${name}`
-
-                    );
-
 
                     resolve();
-
-                },
-
-                undefined,
-
-                (error) => {
-
-                    console.error(
-
-                        `Error cargando ${name}:`,
-
-                        error
-
-                    );
-
-
-                    reject(
-                        error
-                    );
-
+                    return;
                 }
 
-            );
+                const clip =
+                    fbx.animations[0];
 
-        }
+                const action =
+                    mixer.clipAction(clip);
 
-    );
+                action.setLoop(
+                    THREE.LoopRepeat,
+                    Infinity
+                );
 
+                action.clampWhenFinished =
+                    false;
+
+                action.enabled =
+                    true;
+
+                actions[name] =
+                    action;
+
+                console.log(
+                    `Animación cargada: ${name}`
+                );
+
+                resolve();
+
+            },
+            undefined,
+            (error) => {
+
+                console.error(
+                    `Error cargando ${name}:`,
+                    error
+                );
+
+                reject(error);
+            }
+        );
+    });
 }
 
 
@@ -1597,168 +990,72 @@ function loadAnimation(
 // REPRODUCIR ANIMACIÓN
 // ============================================================
 
-function playAction(
-    name
-) {
+function playAction(name) {
 
     const nextAction =
         actions[name];
 
-
-    if (
-        !nextAction
-    ) {
-
-        console.warn(
-
-            `No existe la animación: ${name}`
-
-        );
-
-
+    if (!nextAction) {
+        console.warn(`No existe la animación: ${name}`);
         return;
-
     }
 
-
-    // No reiniciar si ya está activa.
-    if (
-        currentAction ===
-        nextAction
-    ) {
-
+    // no reiniciar si ya está activa
+    if (currentAction === nextAction) {
         return;
-
     }
 
-
-    // ========================================================
-    // PRIMERA ANIMACIÓN
-    // ========================================================
-
-    if (
-        !currentAction
-    ) {
+    // primera animación
+    if (!currentAction) {
 
         nextAction
             .reset()
-            .setEffectiveTimeScale(
-                1
-            )
-            .setEffectiveWeight(
-                1
-            )
+            .setEffectiveTimeScale(1)
+            .setEffectiveWeight(1)
             .play();
 
-
-        currentAction =
-            nextAction;
-
-
-        currentAnimationName =
-            name;
-
-
-        updateAnimationName(
-            name
-        );
-
-
+        currentAction = nextAction;
+        currentAnimationName = name;
+        updateAnimationName(name);
         return;
-
     }
 
-
-    // ========================================================
-    // PROGRESO ACTUAL
-    // ========================================================
-
+    // conservar progreso aproximado
     const currentClip =
         currentAction.getClip();
 
+    let progress = 0;
 
-    let progress =
-        0;
-
-
-    if (
-        currentClip.duration >
-        0
-    ) {
+    if (currentClip.duration > 0) {
 
         progress =
-
             (
-                currentAction.time
-                %
+                currentAction.time %
                 currentClip.duration
             )
-
-            /
-
-            currentClip.duration;
-
+            / currentClip.duration;
     }
-
-
-    // ========================================================
-    // NUEVA ANIMACIÓN
-    // ========================================================
 
     const nextClip =
         nextAction.getClip();
 
-
     nextAction.reset();
-
-
-    nextAction.enabled =
-        true;
-
-
-    nextAction.setEffectiveTimeScale(
-        1
-    );
-
-
-    nextAction.setEffectiveWeight(
-        1
-    );
-
-
-    nextAction.time =
-
-        progress *
-
-        nextClip.duration;
-
-
+    nextAction.enabled = true;
+    nextAction.setEffectiveTimeScale(1);
+    nextAction.setEffectiveWeight(1);
+    nextAction.time = progress * nextClip.duration;
     nextAction.play();
 
-
     nextAction.crossFadeFrom(
-
         currentAction,
-
         0.30,
-
         true
-
     );
 
+    currentAction = nextAction;
+    currentAnimationName = name;
 
-    currentAction =
-        nextAction;
-
-
-    currentAnimationName =
-        name;
-
-
-    updateAnimationName(
-        name
-    );
-
+    updateAnimationName(name);
 }
 
 
@@ -1766,33 +1063,16 @@ function playAction(
 // ACTUALIZAR NOMBRE
 // ============================================================
 
-function updateAnimationName(
-    name
-) {
+function updateAnimationName(name) {
 
     const element =
-        document.getElementById(
-            'animation-name'
-        );
+        document.getElementById('animation-name');
 
-
-    if (
-        !element
-    ) {
-
-        return;
-
-    }
-
+    if (!element) return;
 
     element.textContent =
-
-        animationLabels[name]
-
-        ||
-
+        animationLabels[name] ||
         name.toUpperCase();
-
 }
 
 
@@ -1802,49 +1082,15 @@ function updateAnimationName(
 
 function updateInfiniteFloor() {
 
-    if (
-        !model
-    ) {
-
-        return;
-
-    }
-
-
-    // El piso se recoloca en bloques.
-    // No sigue exactamente al personaje,
-    // porque eso haría que pareciera una
-    // caminadora.
+    if (!model) return;
 
     floor.position.x =
-
-        Math.floor(
-
-            model.position.x /
-
-            FLOOR_RECENTER_STEP
-
-        )
-
-        *
-
-        FLOOR_RECENTER_STEP;
-
+        Math.floor(model.position.x / FLOOR_RECENTER_STEP)
+        * FLOOR_RECENTER_STEP;
 
     floor.position.z =
-
-        Math.floor(
-
-            model.position.z /
-
-            FLOOR_RECENTER_STEP
-
-        )
-
-        *
-
-        FLOOR_RECENTER_STEP;
-
+        Math.floor(model.position.z / FLOOR_RECENTER_STEP)
+        * FLOOR_RECENTER_STEP;
 }
 
 
@@ -1852,309 +1098,131 @@ function updateInfiniteFloor() {
 // MOVIMIENTO DEL PERSONAJE
 // ============================================================
 
-function updateCharacterMovement(
-    delta
-) {
+function updateCharacterMovement(delta) {
 
-    if (
-        !model
-    ) {
+    if (!model) return;
 
-        return;
+    let turnDirection = 0;
 
+    if (movementKeys.ArrowLeft) {
+        turnDirection += 1;
     }
 
-
-    let turnDirection =
-        0;
-
-
-    // izquierda
-    if (
-        movementKeys.ArrowLeft
-    ) {
-
-        turnDirection +=
-            1;
-
+    if (movementKeys.ArrowRight) {
+        turnDirection -= 1;
     }
-
-
-    // derecha
-    if (
-        movementKeys.ArrowRight
-    ) {
-
-        turnDirection -=
-            1;
-
-    }
-
-
-    // ========================================================
-    // GIRO PROGRESIVO
-    // ========================================================
 
     heading +=
-
-        turnDirection
-
-        *
-
-        TURN_SPEED
-
-        *
-
+        turnDirection *
+        TURN_SPEED *
         delta;
 
+    let movementDirection = 0;
 
-    let movementDirection =
-        0;
-
-
-    // adelante
-    if (
-        movementKeys.ArrowUp
-    ) {
-
-        movementDirection =
-            1;
-
+    if (movementKeys.ArrowUp) {
+        movementDirection = 1;
     }
 
-
-    // atrás
-    if (
-        movementKeys.ArrowDown
-    ) {
-
-        movementDirection =
-            -1;
-
+    if (movementKeys.ArrowDown) {
+        movementDirection = -1;
     }
 
-
-    // Flecha izquierda/derecha sola:
-    // sigue caminando mientras gira.
-
+    // izquierda o derecha solas
     if (
-
-        turnDirection !== 0
-
-        &&
-
+        turnDirection !== 0 &&
         movementDirection === 0
-
     ) {
-
-        movementDirection =
-            1;
-
+        movementDirection = 1;
     }
-
 
     model.rotation.y =
-
-        heading
-
-        +
-
+        heading +
         MODEL_FORWARD_OFFSET;
 
-
-    if (
-        movementDirection === 0
-    ) {
-
+    if (movementDirection === 0) {
         return;
-
     }
 
-
-    // ========================================================
-    // DIRECCIÓN
-    // ========================================================
-
     forwardDirection.set(
-
-        Math.sin(
-            heading
-        ),
-
+        Math.sin(heading),
         0,
-
-        Math.cos(
-            heading
-        )
-
+        Math.cos(heading)
     );
-
 
     forwardDirection.normalize();
 
-
     const distance =
-
-        MOVE_SPEED
-
-        *
-
-        delta
-
-        *
-
+        MOVE_SPEED *
+        delta *
         movementDirection;
 
-
     const deltaX =
-
-        forwardDirection.x
-
-        *
-
+        forwardDirection.x *
         distance;
-
 
     const deltaZ =
-
-        forwardDirection.z
-
-        *
-
+        forwardDirection.z *
         distance;
 
+    model.position.x += deltaX;
+    model.position.z += deltaZ;
 
-    // ========================================================
-    // PERSONAJE
-    // ========================================================
+    camera.position.x += deltaX;
+    camera.position.z += deltaZ;
 
-    model.position.x +=
-        deltaX;
-
-
-    model.position.z +=
-        deltaZ;
-
-
-    // ========================================================
-    // CÁMARA SIGUE AL PERSONAJE
-    // ========================================================
-
-    camera.position.x +=
-        deltaX;
-
-
-    camera.position.z +=
-        deltaZ;
-
-
-    controls.target.x +=
-        deltaX;
-
-
-    controls.target.z +=
-        deltaZ;
-
+    controls.target.x += deltaX;
+    controls.target.z += deltaZ;
 }
 
 
 // ============================================================
-// ACTUALIZAR PÉTALOS
+// ACTUALIZAR HOJAS
 // ============================================================
 
-function updatePetals(
-    delta
-) {
+function updateLeaves(delta) {
 
     const positions =
+        leafGeometry.attributes.position.array;
 
-        petalGeometry
-            .attributes
-            .position
-            .array;
+    const time =
+        performance.now() * 0.001;
 
+    for (let i = 0; i < LEAF_COUNT; i++) {
 
-    for (
-        let i = 0;
-        i < PETAL_COUNT;
-        i++
-    ) {
+        const index = i * 3;
 
-        const index =
-            i * 3;
+        // caída
+        positions[index + 1] -=
+            leafSpeeds[i] * delta;
 
-
-        positions[
-            index + 1
-        ] -=
-
-            petalSpeeds[i]
-
-            *
-
-            delta;
-
-
+        // deriva lateral
         positions[index] +=
+            Math.sin(time * leafDrift[i] + i) * 0.010;
 
-            Math.sin(
+        positions[index + 2] +=
+            Math.cos(time * 0.7 + i * 0.35) * 0.004;
 
-                performance.now()
-                *
-                0.001
+        // reaparecer arriba
+        if (positions[index + 1] < 0) {
 
-                +
+            positions[index] =
+                (Math.random() - 0.5) * 48;
 
-                i
+            positions[index + 1] =
+                10 + Math.random() * 4;
 
-            )
-
-            *
-
-            0.003;
-
-
-        if (
-            positions[
-            index + 1
-            ] < 0
-        ) {
-
-            positions[
-                index + 1
-            ] =
-                10 +
-                Math.random() *
-                4;
-
+            positions[index + 2] =
+                (Math.random() - 0.5) * 48;
         }
-
     }
 
+    leafGeometry.attributes.position.needsUpdate = true;
 
-    petalGeometry
-        .attributes
-        .position
-        .needsUpdate =
-        true;
-
-
-    // Los pétalos siguen aproximadamente
-    // la zona donde está el jugador.
-
-    if (
-        model
-    ) {
-
-        petals.position.x =
-            model.position.x;
-
-
-        petals.position.z =
-            model.position.z;
-
+    // siguen al jugador
+    if (model) {
+        leaves.position.x = model.position.x;
+        leaves.position.z = model.position.z;
     }
-
 }
 
 
@@ -2166,140 +1234,66 @@ loader.load(
 
     './assets/models/character.fbx',
 
-    async (
-        fbx
-    ) => {
+    async (fbx) => {
 
-        model =
-            fbx;
+        model = fbx;
 
+        model.scale.setScalar(0.01);
 
-        model.scale.setScalar(
-            0.01
-        );
-
-
-        model.position.set(
-            0,
-            0,
-            0
-        );
-
+        model.position.set(0, 0, 0);
 
         model.rotation.y =
-
-            heading
-
-            +
-
+            heading +
             MODEL_FORWARD_OFFSET;
 
+        model.traverse((child) => {
 
-        model.traverse(
-
-            (
-                child
-            ) => {
-
-                if (
-                    child.isMesh
-                ) {
-
-                    child.castShadow =
-                        true;
-
-
-                    child.receiveShadow =
-                        true;
-
-                }
-
+            if (child.isMesh) {
+                child.castShadow = true;
+                child.receiveShadow = true;
             }
 
-        );
+        });
 
-
-        scene.add(
-            model
-        );
-
+        scene.add(model);
 
         mixer =
-            new THREE.AnimationMixer(
-                model
-            );
-
+            new THREE.AnimationMixer(model);
 
         try {
 
             await Promise.all(
-
                 Object
-                    .entries(
-                        animationFiles
+                    .entries(animationFiles)
+                    .map(([name, url]) =>
+                        loadAnimation(name, url)
                     )
-                    .map(
-
-                        (
-                            [
-                                name,
-                                url
-                            ]
-                        ) =>
-
-                            loadAnimation(
-                                name,
-                                url
-                            )
-
-                    )
-
             );
-
 
             console.log(
-
                 'Todas las animaciones fueron cargadas.'
-
             );
 
+            playAction('stand');
 
-            playAction(
-                'stand'
-            );
-
-        }
-
-        catch (
-        error
-        ) {
+        } catch (error) {
 
             console.error(
-
                 'Error cargando animaciones:',
-
                 error
-
             );
-
         }
 
     },
 
     undefined,
 
-    (
-        error
-    ) => {
+    (error) => {
 
         console.error(
-
             'Error cargando character.fbx:',
-
             error
-
         );
-
     }
 
 );
@@ -2309,159 +1303,59 @@ loader.load(
 // KEYDOWN
 // ============================================================
 
-window.addEventListener(
+window.addEventListener('keydown', (event) => {
 
-    'keydown',
+    if (event.code in movementKeys) {
 
-    (
-        event
-    ) => {
+        event.preventDefault();
+        movementKeys[event.code] = true;
 
-        // ====================================================
-        // FLECHAS
-        // ====================================================
-
-        if (
-            event.code
-            in
-            movementKeys
-        ) {
-
-            event.preventDefault();
-
-
-            movementKeys[
-                event.code
-            ] =
-                true;
-
-
-            // Walk no se reinicia
-            // si ya está activo.
-
-            playAction(
-                'walk'
-            );
-
-
-            return;
-
-        }
-
-
-        // ====================================================
-        // ANIMACIONES
-        // ====================================================
-
-        const keyboard = {
-
-            Digit1:
-                'dagger',
-
-            Digit2:
-                'jumping',
-
-            Digit3:
-                'punching',
-
-            Digit4:
-                'stand',
-
-            Digit5:
-                'uppercut',
-
-            Digit6:
-                'walk'
-
-        };
-
-
-        const animation =
-            keyboard[
-            event.code
-            ];
-
-
-        if (
-            animation
-        ) {
-
-            playAction(
-                animation
-            );
-
-        }
-
+        playAction('walk');
+        return;
     }
 
-);
+    const keyboard = {
+        Digit1: 'dagger',
+        Digit2: 'jumping',
+        Digit3: 'punching',
+        Digit4: 'stand',
+        Digit5: 'uppercut',
+        Digit6: 'walk'
+    };
+
+    const animation =
+        keyboard[event.code];
+
+    if (animation) {
+        playAction(animation);
+    }
+});
 
 
 // ============================================================
 // KEYUP
 // ============================================================
 
-window.addEventListener(
+window.addEventListener('keyup', (event) => {
 
-    'keyup',
-
-    (
-        event
-    ) => {
-
-        if (
-            event.code
-            in
-            movementKeys
-        ) {
-
-            event.preventDefault();
-
-
-            movementKeys[
-                event.code
-            ] =
-                false;
-
-
-            // NO cambiar a Stand.
-            // La animación Walk puede continuar.
-
-        }
-
+    if (event.code in movementKeys) {
+        event.preventDefault();
+        movementKeys[event.code] = false;
     }
-
-);
+});
 
 
 // ============================================================
-// VENTANA PIERDE FOCO
+// BLUR
 // ============================================================
 
-window.addEventListener(
+window.addEventListener('blur', () => {
 
-    'blur',
-
-    () => {
-
-        movementKeys.ArrowUp =
-            false;
-
-
-        movementKeys.ArrowDown =
-            false;
-
-
-        movementKeys.ArrowLeft =
-            false;
-
-
-        movementKeys.ArrowRight =
-            false;
-
-    }
-
-);
+    movementKeys.ArrowUp = false;
+    movementKeys.ArrowDown = false;
+    movementKeys.ArrowLeft = false;
+    movementKeys.ArrowRight = false;
+});
 
 
 // ============================================================
@@ -2471,93 +1365,28 @@ window.addEventListener(
 function animate() {
 
     const delta =
-
         Math.min(
-
             clock.getDelta(),
-
             0.05
-
         );
 
-
-    // ========================================================
-    // ANIMACIONES
-    // ========================================================
-
-    if (
-        mixer
-    ) {
-
-        mixer.update(
-            delta
-        );
-
+    if (mixer) {
+        mixer.update(delta);
     }
 
-
-    // ========================================================
-    // PERSONAJE
-    // ========================================================
-
-    updateCharacterMovement(
-        delta
-    );
-
-
-    // ========================================================
-    // PISO
-    // ========================================================
-
+    updateCharacterMovement(delta);
     updateInfiniteFloor();
+    updateLeaves(delta);
 
-
-    // ========================================================
-    // PÉTALOS
-    // ========================================================
-
-    updatePetals(
-        delta
-    );
-
-
-    // ========================================================
-    // EL CIELO SIGUE AL JUGADOR
-    // ========================================================
-
-    if (
-        model
-    ) {
-
-        skyDome.position.x =
-            model.position.x;
-
-
-        skyDome.position.z =
-            model.position.z;
-
+    // cielo sigue al jugador
+    if (model) {
+        skyDome.position.x = model.position.x;
+        skyDome.position.z = model.position.z;
     }
-
-
-    // ========================================================
-    // CONTROLES
-    // ========================================================
 
     controls.update();
 
-
-    // ========================================================
-    // RENDER
-    // ========================================================
-
-    renderer.render(
-
-        scene,
-
-        camera
-
-    );
-
+    renderer.render(scene, camera);
 }
 
 
@@ -2565,41 +1394,23 @@ function animate() {
 // INICIAR
 // ============================================================
 
-renderer.setAnimationLoop(
-    animate
-);
+renderer.setAnimationLoop(animate);
 
 
 // ============================================================
 // RESPONSIVE
 // ============================================================
 
-window.addEventListener(
+window.addEventListener('resize', () => {
 
-    'resize',
+    camera.aspect =
+        window.innerWidth /
+        window.innerHeight;
 
-    () => {
+    camera.updateProjectionMatrix();
 
-        camera.aspect =
-
-            window.innerWidth
-
-            /
-
-            window.innerHeight;
-
-
-        camera.updateProjectionMatrix();
-
-
-        renderer.setSize(
-
-            window.innerWidth,
-
-            window.innerHeight
-
-        );
-
-    }
-
-);
+    renderer.setSize(
+        window.innerWidth,
+        window.innerHeight
+    );
+});
