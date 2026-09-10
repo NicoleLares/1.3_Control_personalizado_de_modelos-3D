@@ -1,26 +1,12 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 
+import {
+    OrbitControls
+} from 'three/addons/controls/OrbitControls.js';
 
-// ============================================================
-// INTERFAZ
-// ============================================================
-
-const animationNameElement =
-    document.getElementById('animation-name');
-
-
-function setStatus(text) {
-
-    if (animationNameElement) {
-
-        animationNameElement.textContent =
-            text;
-
-    }
-
-}
+import {
+    FBXLoader
+} from 'three/addons/loaders/FBXLoader.js';
 
 
 // ============================================================
@@ -40,6 +26,10 @@ scene.background =
         BACKGROUND_COLOR
     );
 
+
+// ============================================================
+// NIEBLA
+// ============================================================
 
 scene.fog =
     new THREE.FogExp2(
@@ -81,10 +71,8 @@ camera.position.set(
 const renderer =
     new THREE.WebGLRenderer({
 
-        antialias: true,
-
-        powerPreference:
-            'high-performance'
+        antialias:
+            true
 
     });
 
@@ -93,7 +81,7 @@ renderer.setPixelRatio(
 
     Math.min(
         window.devicePixelRatio,
-        1.75
+        2
     )
 
 );
@@ -138,7 +126,7 @@ document
 
 
 // ============================================================
-// CONTROLES DE CÁMARA
+// CÁMARA - ORBIT CONTROLS
 // ============================================================
 
 const controls =
@@ -179,1266 +167,7 @@ controls.maxDistance =
 
 
 // ============================================================
-// ILUMINACIÓN
-// ============================================================
-
-const hemiLight =
-    new THREE.HemisphereLight(
-
-        0xffcfaa,
-
-        0x1b0a0d,
-
-        2.2
-
-    );
-
-
-scene.add(
-    hemiLight
-);
-
-
-const mainLight =
-    new THREE.DirectionalLight(
-
-        0xffc187,
-
-        3.2
-
-    );
-
-
-mainLight.position.set(
-    8,
-    12,
-    7
-);
-
-
-mainLight.castShadow =
-    true;
-
-
-// 1024 en vez de 2048
-// para cargar/renderizar más rápido.
-
-mainLight.shadow.mapSize.set(
-    1024,
-    1024
-);
-
-
-scene.add(
-    mainLight
-);
-
-
-// Luz rojiza ambiental
-
-const redLight =
-    new THREE.PointLight(
-
-        0xc33131,
-
-        1.3,
-
-        35
-
-    );
-
-
-redLight.position.set(
-    -7,
-    4,
-    -6
-);
-
-
-scene.add(
-    redLight
-);
-
-
-// ============================================================
-// PISO BASE
-// ============================================================
-//
-// Primero mostramos un piso sencillo.
-//
-// Después agregaremos la textura procedural.
-//
-// Esto evita retrasar la carga del personaje.
-// ============================================================
-
-const FLOOR_SIZE =
-    160;
-
-
-const FLOOR_RECENTER_STEP =
-    20;
-
-
-const floorMaterial =
-    new THREE.MeshStandardMaterial({
-
-        color:
-            0x35231a,
-
-        roughness:
-            0.95,
-
-        metalness:
-            0.02
-
-    });
-
-
-const floor =
-    new THREE.Mesh(
-
-        new THREE.PlaneGeometry(
-
-            FLOOR_SIZE,
-
-            FLOOR_SIZE
-
-        ),
-
-        floorMaterial
-
-    );
-
-
-floor.rotation.x =
-    -Math.PI / 2;
-
-
-floor.receiveShadow =
-    true;
-
-
-scene.add(
-    floor
-);
-
-
-// ============================================================
-// MODELO Y ANIMACIONES
-// ============================================================
-
-const characterLoader =
-    new FBXLoader();
-
-
-const animationLoader =
-    new FBXLoader();
-
-
-const clock =
-    new THREE.Clock();
-
-
-const actions =
-    {};
-
-
-const animationPromises =
-    {};
-
-
-let model =
-    null;
-
-
-let mixer =
-    null;
-
-
-let currentAction =
-    null;
-
-
-let currentAnimationName =
-    null;
-
-
-// Guarda la última animación
-// seleccionada por el usuario.
-
-let pendingAnimationName =
-    null;
-
-
-// ============================================================
-// ARCHIVOS DE ANIMACIÓN
-// ============================================================
-
-const animationFiles = {
-
-    dagger:
-        './assets/models/animations/Double_Dagger.fbx',
-
-    jumping:
-        './assets/models/animations/Jumping.fbx',
-
-    punching:
-        './assets/models/animations/Punching.fbx',
-
-    stand:
-        './assets/models/animations/Stand.fbx',
-
-    uppercut:
-        './assets/models/animations/Uppercut.fbx',
-
-    walk:
-        './assets/models/animations/Walk.fbx'
-
-};
-
-
-// ============================================================
-// NOMBRES DE ANIMACIONES
-// ============================================================
-
-const animationLabels = {
-
-    dagger:
-        'DOUBLE DAGGER',
-
-    jumping:
-        'JUMPING',
-
-    punching:
-        'PUNCHING',
-
-    stand:
-        'STAND',
-
-    uppercut:
-        'UPPERCUT',
-
-    walk:
-        'WALK'
-
-};
-
-
-// ============================================================
-// MOVIMIENTO
-// ============================================================
-
-const MOVE_SPEED =
-    2.5;
-
-
-const TURN_SPEED =
-    2.2;
-
-
-let heading =
-    Math.PI;
-
-
-// Si el personaje camina
-// mirando hacia atrás:
-//
-// cambia 0 por Math.PI.
-
-const MODEL_FORWARD_OFFSET =
-    0;
-
-
-const forwardDirection =
-    new THREE.Vector3();
-
-
-// ============================================================
-// FLECHAS
-// ============================================================
-
-const movementKeys = {
-
-    ArrowUp:
-        false,
-
-    ArrowDown:
-        false,
-
-    ArrowLeft:
-        false,
-
-    ArrowRight:
-        false
-
-};
-
-
-// ============================================================
-// CARGAR ANIMACIÓN BAJO DEMANDA
-// ============================================================
-//
-// Esta función evita cargar dos veces
-// el mismo archivo.
-//
-// Si ya está cargado lo reutiliza.
-// ============================================================
-
-function ensureAnimationLoaded(
-    name
-) {
-
-    // Ya cargada
-    if (
-        actions[name]
-    ) {
-
-        return Promise.resolve(
-            actions[name]
-        );
-
-    }
-
-
-    // Ya se está descargando
-    if (
-        animationPromises[name]
-    ) {
-
-        return animationPromises[
-            name
-        ];
-
-    }
-
-
-    // Modelo todavía no disponible
-    if (
-        !mixer
-    ) {
-
-        return Promise.reject(
-
-            new Error(
-                'El modelo todavía no está listo.'
-            )
-
-        );
-
-    }
-
-
-    const url =
-        animationFiles[name];
-
-
-    // ========================================================
-    // CREAR PROMESA DE CARGA
-    // ========================================================
-
-    animationPromises[name] =
-        new Promise(
-
-            (
-                resolve,
-                reject
-            ) => {
-
-                animationLoader.load(
-
-                    url,
-
-                    // =================================================
-                    // CARGADA
-                    // =================================================
-
-                    (
-                        fbx
-                    ) => {
-
-                        if (
-
-                            !fbx.animations
-
-                            ||
-
-                            fbx.animations.length ===
-                            0
-
-                        ) {
-
-                            reject(
-
-                                new Error(
-
-                                    `${name} no contiene animaciones.`
-
-                                )
-
-                            );
-
-
-                            return;
-
-                        }
-
-
-                        const clip =
-                            fbx.animations[0];
-
-
-                        const action =
-                            mixer.clipAction(
-                                clip
-                            );
-
-
-                        // =================================================
-                        // REPETICIÓN INFINITA
-                        // =================================================
-
-                        action.setLoop(
-
-                            THREE.LoopRepeat,
-
-                            Infinity
-
-                        );
-
-
-                        action.clampWhenFinished =
-                            false;
-
-
-                        action.enabled =
-                            true;
-
-
-                        actions[name] =
-                            action;
-
-
-                        console.log(
-
-                            `✅ Animación cargada: ${name}`
-
-                        );
-
-
-                        resolve(
-                            action
-                        );
-
-                    },
-
-
-                    // =================================================
-                    // PROGRESO
-                    // =================================================
-
-                    undefined,
-
-
-                    // =================================================
-                    // ERROR
-                    // =================================================
-
-                    (
-                        error
-                    ) => {
-
-                        console.error(
-
-                            `❌ Error cargando ${name}:`,
-
-                            error
-
-                        );
-
-
-                        reject(
-                            error
-                        );
-
-                    }
-
-                );
-
-            }
-
-        )
-        .catch(
-
-            (
-                error
-            ) => {
-
-                // Si falla permitimos
-                // volver a intentarlo.
-
-                delete animationPromises[
-                    name
-                ];
-
-
-                throw error;
-
-            }
-
-        );
-
-
-    return animationPromises[
-        name
-    ];
-
-}
-
-
-// ============================================================
-// REPRODUCIR ANIMACIÓN
-// ============================================================
-
-async function playAction(
-    name
-) {
-
-    // Guardamos la animación
-    // más reciente elegida.
-
-    pendingAnimationName =
-        name;
-
-
-    // ========================================================
-    // MODELO TODAVÍA CARGANDO
-    // ========================================================
-
-    if (
-        !mixer
-    ) {
-
-        setStatus(
-            'CARGANDO MODELO'
-        );
-
-
-        return;
-
-    }
-
-
-    // ========================================================
-    // SI LA ANIMACIÓN NO ESTÁ CARGADA
-    // ========================================================
-
-    if (
-        !actions[name]
-    ) {
-
-        setStatus(
-
-            `CARGANDO ${
-                animationLabels[name]
-
-                ||
-
-                name.toUpperCase()
-            }`
-
-        );
-
-
-        try {
-
-            await ensureAnimationLoaded(
-                name
-            );
-
-        }
-
-        catch (
-            error
-        ) {
-
-            console.error(
-
-                `No se pudo reproducir ${name}:`,
-
-                error
-
-            );
-
-
-            setStatus(
-                'ERROR ANIMACIÓN'
-            );
-
-
-            return;
-
-        }
-
-    }
-
-
-    // ========================================================
-    // SI EL USUARIO CAMBIÓ DE ANIMACIÓN
-    // MIENTRAS ESTABA CARGANDO
-    // ========================================================
-
-    if (
-        pendingAnimationName !==
-        name
-    ) {
-
-        return;
-
-    }
-
-
-    const nextAction =
-        actions[name];
-
-
-    if (
-        !nextAction
-    ) {
-
-        return;
-
-    }
-
-
-    // ========================================================
-    // NO REINICIAR SI YA ESTÁ ACTIVA
-    // ========================================================
-    //
-    // Fundamental para WALK.
-    // ========================================================
-
-    if (
-        currentAction ===
-        nextAction
-    ) {
-
-        currentAnimationName =
-            name;
-
-
-        setStatus(
-            animationLabels[name]
-        );
-
-
-        return;
-
-    }
-
-
-    // ========================================================
-    // CONFIGURAR NUEVA ANIMACIÓN
-    // ========================================================
-
-    nextAction.enabled =
-        true;
-
-
-    nextAction.setEffectiveTimeScale(
-        1
-    );
-
-
-    nextAction.setEffectiveWeight(
-        1
-    );
-
-
-    // ========================================================
-    // PRIMERA ANIMACIÓN
-    // ========================================================
-
-    if (
-        !currentAction
-    ) {
-
-        nextAction
-            .reset()
-            .play();
-
-    }
-
-
-    // ========================================================
-    // TRANSICIÓN ENTRE ANIMACIONES
-    // ========================================================
-
-    else {
-
-        nextAction
-            .reset()
-            .play();
-
-
-        nextAction.crossFadeFrom(
-
-            currentAction,
-
-            0.25,
-
-            true
-
-        );
-
-    }
-
-
-    currentAction =
-        nextAction;
-
-
-    currentAnimationName =
-        name;
-
-
-    setStatus(
-        animationLabels[name]
-    );
-
-}
-
-
-// ============================================================
-// PRIORIDAD DE ANIMACIONES
-// ============================================================
-//
-// Primero:
-//
-// 1. STAND
-// 2. WALK
-//
-// Después:
-//
-// 3. Dagger
-// 4. Jumping
-// 5. Punching
-// 6. Uppercut
-//
-// ============================================================
-
-async function preloadAnimationsInPriorityOrder() {
-
-    const requested =
-        pendingAnimationName;
-
-
-    // ========================================================
-    // PRIMERA ANIMACIÓN
-    // ========================================================
-
-    try {
-
-        // Si el usuario presionó una tecla
-        // mientras el modelo cargaba,
-        // le damos prioridad.
-
-        if (
-            requested
-        ) {
-
-            await ensureAnimationLoaded(
-                requested
-            );
-
-
-            await playAction(
-                requested
-            );
-
-        }
-
-
-        // Si no seleccionó ninguna,
-        // cargamos Stand primero.
-
-        else {
-
-            await ensureAnimationLoaded(
-                'stand'
-            );
-
-
-            await playAction(
-                'stand'
-            );
-
-        }
-
-    }
-
-    catch (
-        error
-    ) {
-
-        console.error(
-
-            'Error cargando animación inicial:',
-
-            error
-
-        );
-
-
-        setStatus(
-            'MODELO LISTO'
-        );
-
-    }
-
-
-    // ========================================================
-    // PRECARGAR STAND Y WALK
-    // ========================================================
-
-    for (
-        const name
-        of
-        [
-            'stand',
-            'walk'
-        ]
-    ) {
-
-        if (
-            !actions[name]
-        ) {
-
-            try {
-
-                await ensureAnimationLoaded(
-                    name
-                );
-
-            }
-
-            catch (
-                error
-            ) {
-
-                console.error(
-
-                    `No se pudo precargar ${name}:`,
-
-                    error
-
-                );
-
-            }
-
-        }
-
-    }
-
-
-    // ========================================================
-    // RESTO EN SEGUNDO PLANO
-    // ========================================================
-
-    Promise
-        .allSettled(
-
-            [
-                'dagger',
-                'jumping',
-                'punching',
-                'uppercut'
-            ]
-            .map(
-
-                (
-                    name
-                ) =>
-
-                    ensureAnimationLoaded(
-                        name
-                    )
-
-            )
-
-        )
-        .then(
-
-            () => {
-
-                console.log(
-
-                    '✅ Las animaciones secundarias terminaron de cargar.'
-
-                );
-
-            }
-
-        );
-
-}
-
-
-// ============================================================
-// COLOCAR PERSONAJE SOBRE EL PISO
-// ============================================================
-
-function placeModelOnGround() {
-
-    if (
-        !model
-    ) {
-
-        return;
-
-    }
-
-
-    model.updateMatrixWorld(
-        true
-    );
-
-
-    const box =
-        new THREE.Box3()
-            .setFromObject(
-                model
-            );
-
-
-    if (
-        Number.isFinite(
-            box.min.y
-        )
-    ) {
-
-        model.position.y -=
-            box.min.y;
-
-
-        model.updateMatrixWorld(
-            true
-        );
-
-    }
-
-}
-
-
-// ============================================================
-// CARGAR PERSONAJE PRIMERO
-// ============================================================
-//
-// ESTA ES LA OPTIMIZACIÓN MÁS IMPORTANTE.
-//
-// character.fbx se descarga ANTES
-// de las animaciones.
-// ============================================================
-
-function loadCharacterFirst() {
-
-    setStatus(
-        'CARGANDO MODELO'
-    );
-
-
-    characterLoader.load(
-
-        './assets/models/character.fbx',
-
-
-        // ====================================================
-        // MODELO CARGADO
-        // ====================================================
-
-        (
-            fbx
-        ) => {
-
-            model =
-                fbx;
-
-
-            // =================================================
-            // ESCALA
-            // =================================================
-
-            model.scale.setScalar(
-                0.01
-            );
-
-
-            // =================================================
-            // POSICIÓN
-            // =================================================
-
-            model.position.set(
-                0,
-                0,
-                0
-            );
-
-
-            // =================================================
-            // ROTACIÓN
-            // =================================================
-
-            model.rotation.y =
-
-                heading
-
-                +
-
-                MODEL_FORWARD_OFFSET;
-
-
-            // =================================================
-            // SOMBRAS
-            // =================================================
-
-            model.traverse(
-
-                (
-                    child
-                ) => {
-
-                    if (
-                        child.isMesh
-                    ) {
-
-                        child.castShadow =
-                            true;
-
-
-                        child.receiveShadow =
-                            true;
-
-                    }
-
-                }
-
-            );
-
-
-            // =================================================
-            // MOSTRAR PERSONAJE INMEDIATAMENTE
-            // =================================================
-            //
-            // No esperamos ninguna animación.
-            // =================================================
-
-            scene.add(
-                model
-            );
-
-
-            placeModelOnGround();
-
-
-            // =================================================
-            // MIXER
-            // =================================================
-
-            mixer =
-                new THREE.AnimationMixer(
-                    model
-                );
-
-
-            // =================================================
-            // CÁMARA APUNTA AL PERSONAJE
-            // =================================================
-
-            controls.target.set(
-
-                model.position.x,
-
-                model.position.y + 1,
-
-                model.position.z
-
-            );
-
-
-            controls.update();
-
-
-            // =================================================
-            // PERSONAJE YA VISIBLE
-            // =================================================
-
-            setStatus(
-                'MODELO LISTO'
-            );
-
-
-            console.log(
-
-                '✅ character.fbx ya está visible.'
-
-            );
-
-
-            // =================================================
-            // DESPUÉS CARGAMOS ANIMACIONES
-            // =================================================
-            //
-            // requestAnimationFrame permite
-            // que primero se dibuje el personaje.
-            // =================================================
-
-            requestAnimationFrame(
-
-                () => {
-
-                    preloadAnimationsInPriorityOrder();
-
-                }
-
-            );
-
-        },
-
-
-        // ====================================================
-        // PROGRESO DE DESCARGA
-        // ====================================================
-
-        (
-            xhr
-        ) => {
-
-            if (
-                xhr.total >
-                0
-            ) {
-
-                const percent =
-
-                    Math.round(
-
-                        (
-                            xhr.loaded
-
-                            /
-
-                            xhr.total
-                        )
-
-                        *
-
-                        100
-
-                    );
-
-
-                setStatus(
-
-                    `MODELO ${percent}%`
-
-                );
-
-            }
-
-
-            // Si GitHub Pages no envía
-            // Content-Length mostramos MB.
-
-            else {
-
-                const mb =
-
-                    (
-                        xhr.loaded
-
-                        /
-
-                        1024
-
-                        /
-
-                        1024
-                    )
-                    .toFixed(
-                        1
-                    );
-
-
-                setStatus(
-
-                    `MODELO ${mb} MB`
-
-                );
-
-            }
-
-        },
-
-
-        // ====================================================
-        // ERROR
-        // ====================================================
-
-        (
-            error
-        ) => {
-
-            console.error(
-
-                '❌ Error cargando character.fbx:',
-
-                error
-
-            );
-
-
-            setStatus(
-                'ERROR MODELO'
-            );
-
-        }
-
-    );
-
-}
-
-
-// ============================================================
-// VARIABLES DEL ENTORNO SAMURÁI
-// ============================================================
-
-let skyDome =
-    null;
-
-
-let petals =
-    null;
-
-
-let petalGeometry =
-    null;
-
-
-let petalSpeeds =
-    null;
-
-
-let environmentReady =
-    false;
-
-
-// Menos partículas para mejorar rendimiento.
-
-const PETAL_COUNT =
-    180;
-
-
-// ============================================================
-// CIELO SAMURÁI PROCEDURAL
+// CREAR CIELO SAMURAI PROCEDURAL
 // ============================================================
 
 function createSamuraiSky() {
@@ -1449,15 +178,12 @@ function createSamuraiSky() {
         );
 
 
-    // Antes era más grande.
-    // 1024 × 512 es suficiente.
-
     canvas.width =
-        1024;
+        2048;
 
 
     canvas.height =
-        512;
+        1024;
 
 
     const ctx =
@@ -1467,23 +193,20 @@ function createSamuraiSky() {
 
 
     // ========================================================
-    // GRADIENTE DEL CIELO
+    // CIELO
     // ========================================================
 
     const gradient =
         ctx.createLinearGradient(
-
             0,
             0,
-
             0,
             canvas.height
-
         );
 
 
     gradient.addColorStop(
-        0.00,
+        0,
         '#080710'
     );
 
@@ -1513,7 +236,7 @@ function createSamuraiSky() {
 
 
     gradient.addColorStop(
-        1.00,
+        1,
         '#291116'
     );
 
@@ -1535,7 +258,7 @@ function createSamuraiSky() {
 
 
     // ========================================================
-    // SOL JAPONÉS
+    // RESPLANDOR
     // ========================================================
 
     const sunX =
@@ -1553,39 +276,30 @@ function createSamuraiSky() {
 
             sunX,
             sunY,
-            10,
+            20,
 
             sunX,
             sunY,
-            165
+            330
 
         );
 
 
     glow.addColorStop(
-
         0,
-
         'rgba(255,210,135,0.75)'
-
     );
 
 
     glow.addColorStop(
-
         0.35,
-
         'rgba(255,110,70,0.30)'
-
     );
 
 
     glow.addColorStop(
-
         1,
-
         'rgba(255,70,40,0)'
-
     );
 
 
@@ -1595,16 +309,20 @@ function createSamuraiSky() {
 
     ctx.fillRect(
 
-        sunX - 180,
+        sunX - 350,
 
-        sunY - 180,
+        sunY - 350,
 
-        360,
+        700,
 
-        360
+        700
 
     );
 
+
+    // ========================================================
+    // SOL JAPONÉS
+    // ========================================================
 
     ctx.beginPath();
 
@@ -1615,12 +333,11 @@ function createSamuraiSky() {
 
         sunY,
 
-        58,
+        115,
 
         0,
 
-        Math.PI *
-        2
+        Math.PI * 2
 
     );
 
@@ -1638,7 +355,7 @@ function createSamuraiSky() {
 
     for (
         let i = 0;
-        i < 14;
+        i < 22;
         i++
     ) {
 
@@ -1648,39 +365,24 @@ function createSamuraiSky() {
 
 
         const y =
-
-            canvas.height
-
-            *
-
+            canvas.height *
             (
-                0.47
-
-                +
-
+                0.47 +
                 Math.random() *
                 0.25
             );
 
 
         const width =
-
-            60
-
-            +
-
+            120 +
             Math.random() *
-            140;
+            280;
 
 
         const height =
-
-            5
-
-            +
-
+            10 +
             Math.random() *
-            18;
+            35;
 
 
         ctx.fillStyle =
@@ -1689,14 +391,10 @@ function createSamuraiSky() {
                 255,
                 190,
                 150,
-                ${
-                    0.025
-
-                    +
-
-                    Math.random() *
-                    0.04
-                }
+                ${0.025 +
+            Math.random() *
+            0.04
+            }
             )`;
 
 
@@ -1715,8 +413,7 @@ function createSamuraiSky() {
 
             0,
 
-            Math.PI *
-            2
+            Math.PI * 2
 
         );
 
@@ -1738,37 +435,24 @@ function createSamuraiSky() {
 
 
     ctx.moveTo(
-
         0,
-
         canvas.height *
         0.76
-
     );
 
 
     for (
-
         let x = 0;
-
-        x <=
-        canvas.width;
-
-        x += 60
-
+        x <= canvas.width;
+        x += 120
     ) {
 
         const peak =
 
-            canvas.height
-
-            *
+            canvas.height *
 
             (
-                0.58
-
-                +
-
+                0.58 +
                 Math.random() *
                 0.12
             );
@@ -1776,7 +460,7 @@ function createSamuraiSky() {
 
         ctx.lineTo(
 
-            x + 30,
+            x + 60,
 
             peak
 
@@ -1785,7 +469,7 @@ function createSamuraiSky() {
 
         ctx.lineTo(
 
-            x + 60,
+            x + 120,
 
             canvas.height *
             0.76
@@ -1831,37 +515,24 @@ function createSamuraiSky() {
 
 
     ctx.moveTo(
-
         0,
-
         canvas.height *
         0.82
-
     );
 
 
     for (
-
         let x = 0;
-
-        x <=
-        canvas.width;
-
-        x += 48
-
+        x <= canvas.width;
+        x += 95
     ) {
 
         const peak =
 
-            canvas.height
-
-            *
+            canvas.height *
 
             (
-                0.69
-
-                +
-
+                0.69 +
                 Math.random() *
                 0.08
             );
@@ -1869,7 +540,7 @@ function createSamuraiSky() {
 
         ctx.lineTo(
 
-            x + 24,
+            x + 48,
 
             peak
 
@@ -1878,7 +549,7 @@ function createSamuraiSky() {
 
         ctx.lineTo(
 
-            x + 48,
+            x + 95,
 
             canvas.height *
             0.82
@@ -1931,66 +602,39 @@ function createSamuraiSky() {
 
 
     // columnas
-
     ctx.fillRect(
-
-        toriiX - 30,
-
-        toriiY - 60,
-
-        7,
-
-        63
-
+        toriiX - 60,
+        toriiY - 120,
+        14,
+        125
     );
 
 
     ctx.fillRect(
-
-        toriiX + 23,
-
-        toriiY - 60,
-
-        7,
-
-        63
-
+        toriiX + 46,
+        toriiY - 120,
+        14,
+        125
     );
 
 
     // travesaño
-
     ctx.fillRect(
-
-        toriiX - 45,
-
-        toriiY - 63,
-
-        90,
-
-        7
-
+        toriiX - 90,
+        toriiY - 125,
+        180,
+        13
     );
 
 
     // techo
-
     ctx.fillRect(
-
-        toriiX - 55,
-
-        toriiY - 73,
-
-        110,
-
-        7
-
+        toriiX - 110,
+        toriiY - 145,
+        220,
+        12
     );
 
-
-    // ========================================================
-    // TEXTURA
-    // ========================================================
 
     const texture =
         new THREE.CanvasTexture(
@@ -2008,6 +652,44 @@ function createSamuraiSky() {
 
 
 // ============================================================
+// DOMO DEL CIELO
+// ============================================================
+
+const samuraiSky =
+    createSamuraiSky();
+
+
+const skyDome =
+    new THREE.Mesh(
+
+        new THREE.SphereGeometry(
+            400,
+            48,
+            32
+        ),
+
+        new THREE.MeshBasicMaterial({
+
+            map:
+                samuraiSky,
+
+            side:
+                THREE.BackSide,
+
+            fog:
+                false
+
+        })
+
+    );
+
+
+scene.add(
+    skyDome
+);
+
+
+// ============================================================
 // TEXTURA PROCEDURAL DEL PISO
 // ============================================================
 
@@ -2020,11 +702,11 @@ function createGroundTexture() {
 
 
     canvas.width =
-        512;
+        1024;
 
 
     canvas.height =
-        512;
+        1024;
 
 
     const ctx =
@@ -2047,19 +729,18 @@ function createGroundTexture() {
         0,
 
         canvas.width,
-
         canvas.height
 
     );
 
 
     // ========================================================
-    // TIERRA / GRANULADO
+    // VARIACIÓN DE TIERRA
     // ========================================================
 
     for (
         let i = 0;
-        i < 3000;
+        i < 9000;
         i++
     ) {
 
@@ -2074,48 +755,31 @@ function createGroundTexture() {
 
 
         const size =
-            1
-
-            +
-
+            1 +
             Math.random() *
-            3;
+            4;
 
 
         const brightness =
-
-            30
-
-            +
-
+            30 +
             Math.floor(
-
                 Math.random() *
                 35
-
             );
 
 
         ctx.fillStyle =
 
             `rgba(
-                ${
-                    brightness +
-                    25
-                },
-                ${
-                    brightness +
-                    10
-                },
+                ${brightness + 25
+            },
+                ${brightness + 10
+            },
                 ${brightness},
-                ${
-                    0.04
-
-                    +
-
-                    Math.random() *
-                    0.10
-                }
+                ${0.04 +
+            Math.random() *
+            0.10
+            }
             )`;
 
 
@@ -2138,7 +802,7 @@ function createGroundTexture() {
 
     for (
         let i = 0;
-        i < 60;
+        i < 100;
         i++
     ) {
 
@@ -2153,23 +817,15 @@ function createGroundTexture() {
 
 
         const rx =
-
-            2
-
-            +
-
+            4 +
             Math.random() *
-            6;
+            10;
 
 
         const ry =
-
-            1
-
-            +
-
+            2 +
             Math.random() *
-            4;
+            6;
 
 
         ctx.fillStyle =
@@ -2178,14 +834,10 @@ function createGroundTexture() {
                 70,
                 62,
                 54,
-                ${
-                    0.2
-
-                    +
-
-                    Math.random() *
-                    0.25
-                }
+                ${0.2 +
+            Math.random() *
+            0.25
+            }
             )`;
 
 
@@ -2205,8 +857,7 @@ function createGroundTexture() {
 
             0,
 
-            Math.PI *
-            2
+            Math.PI * 2
 
         );
 
@@ -2217,22 +868,17 @@ function createGroundTexture() {
 
 
     // ========================================================
-    // LÍNEAS TIPO JARDÍN JAPONÉS
+    // LÍNEAS DE ARENA
     // ========================================================
 
     ctx.lineWidth =
-        1;
+        1.2;
 
 
     for (
-
         let y = 0;
-
-        y <
-        canvas.height;
-
-        y += 18
-
+        y < canvas.height;
+        y += 24
     ) {
 
         ctx.strokeStyle =
@@ -2243,37 +889,28 @@ function createGroundTexture() {
 
 
         for (
-
             let x = 0;
-
-            x <=
-            canvas.width;
-
-            x += 10
-
+            x <= canvas.width;
+            x += 12
         ) {
 
             const wave =
 
                 Math.sin(
 
-                    (
-                        x *
-                        0.018
-                    )
+                    x *
+                    0.018
 
                     +
 
-                    (
-                        y *
-                        0.025
-                    )
+                    y *
+                    0.025
 
                 )
 
                 *
 
-                2;
+                2.5;
 
 
             if (
@@ -2336,15 +973,9 @@ function createGroundTexture() {
 
     texture.anisotropy =
 
-        Math.min(
-
-            renderer
-                .capabilities
-                .getMaxAnisotropy(),
-
-            4
-
-        );
+        renderer
+            .capabilities
+            .getMaxAnisotropy();
 
 
     return texture;
@@ -2365,11 +996,11 @@ function createGroundBump() {
 
 
     canvas.width =
-        256;
+        512;
 
 
     canvas.height =
-        256;
+        512;
 
 
     const ctx =
@@ -2383,39 +1014,28 @@ function createGroundBump() {
 
 
     ctx.fillRect(
-
         0,
         0,
-
-        canvas.width,
-
-        canvas.height
-
+        512,
+        512
     );
 
 
     for (
         let i = 0;
-        i < 3500;
+        i < 12000;
         i++
     ) {
 
         const value =
-
-            90
-
-            +
-
+            90 +
             Math.floor(
-
                 Math.random() *
                 85
-
             );
 
 
         ctx.fillStyle =
-
             `rgb(
                 ${value},
                 ${value},
@@ -2426,22 +1046,16 @@ function createGroundBump() {
         ctx.fillRect(
 
             Math.random() *
-            canvas.width,
+            512,
 
             Math.random() *
-            canvas.height,
+            512,
 
-            1
-
-            +
-
+            1 +
             Math.random() *
             2,
 
-            1
-
-            +
-
+            1 +
             Math.random() *
             2
 
@@ -2476,157 +1090,541 @@ function createGroundBump() {
 
 
 // ============================================================
-// PÉTALOS DE SAKURA
+// PISO
 // ============================================================
 
-function createPetals() {
-
-    const positions =
-        new Float32Array(
-
-            PETAL_COUNT *
-            3
-
-        );
+const FLOOR_SIZE =
+    160;
 
 
-    petalSpeeds =
-        new Float32Array(
-            PETAL_COUNT
-        );
+const FLOOR_RECENTER_STEP =
+    20;
 
 
-    for (
-        let i = 0;
-        i < PETAL_COUNT;
-        i++
-    ) {
-
-        const index =
-            i *
-            3;
+const groundTexture =
+    createGroundTexture();
 
 
-        positions[index] =
-
-            (
-                Math.random()
-
-                -
-
-                0.5
-            )
-
-            *
-
-            45;
+const groundBump =
+    createGroundBump();
 
 
-        positions[
-            index + 1
-        ] =
+const floor =
+    new THREE.Mesh(
 
-            Math.random()
+        new THREE.PlaneGeometry(
+            FLOOR_SIZE,
+            FLOOR_SIZE
+        ),
 
-            *
+        new THREE.MeshStandardMaterial({
 
-            12;
+            map:
+                groundTexture,
 
+            bumpMap:
+                groundBump,
 
-        positions[
-            index + 2
-        ] =
+            bumpScale:
+                0.12,
 
-            (
-                Math.random()
+            roughness:
+                0.95,
 
-                -
+            metalness:
+                0.02
 
-                0.5
-            )
-
-            *
-
-            45;
-
-
-        petalSpeeds[i] =
-
-            0.25
-
-            +
-
-            Math.random() *
-            0.45;
-
-    }
-
-
-    petalGeometry =
-        new THREE.BufferGeometry();
-
-
-    petalGeometry.setAttribute(
-
-        'position',
-
-        new THREE.BufferAttribute(
-
-            positions,
-
-            3
-
-        )
+        })
 
     );
 
 
-    const material =
-        new THREE.PointsMaterial({
-
-            color:
-                0xffa7b8,
-
-            size:
-                0.055,
-
-            transparent:
-                true,
-
-            opacity:
-                0.8,
-
-            depthWrite:
-                false
-
-        });
+floor.rotation.x =
+    -Math.PI / 2;
 
 
-    petals =
-        new THREE.Points(
-
-            petalGeometry,
-
-            material
-
-        );
+floor.receiveShadow =
+    true;
 
 
-    scene.add(
-        petals
+scene.add(
+    floor
+);
+
+
+// ============================================================
+// ILUMINACIÓN
+// ============================================================
+
+const hemiLight =
+    new THREE.HemisphereLight(
+
+        0xffcfaa,
+
+        0x1b0a0d,
+
+        2.2
+
+    );
+
+
+scene.add(
+    hemiLight
+);
+
+
+const mainLight =
+    new THREE.DirectionalLight(
+
+        0xffc187,
+
+        3.2
+
+    );
+
+
+mainLight.position.set(
+    8,
+    12,
+    7
+);
+
+
+mainLight.castShadow =
+    true;
+
+
+mainLight.shadow.mapSize.set(
+    2048,
+    2048
+);
+
+
+scene.add(
+    mainLight
+);
+
+
+// Luz rojiza lateral
+
+const redLight =
+    new THREE.PointLight(
+
+        0xc33131,
+
+        1.5,
+
+        35
+
+    );
+
+
+redLight.position.set(
+    -7,
+    4,
+    -6
+);
+
+
+scene.add(
+    redLight
+);
+
+
+// ============================================================
+// PÉTALOS DE SAKURA
+// ============================================================
+
+const PETAL_COUNT =
+    350;
+
+
+const petalPositions =
+    new Float32Array(
+        PETAL_COUNT *
+        3
+    );
+
+
+const petalSpeeds =
+    [];
+
+
+for (
+    let i = 0;
+    i < PETAL_COUNT;
+    i++
+) {
+
+    const index =
+        i * 3;
+
+
+    petalPositions[index] =
+        (
+            Math.random() -
+            0.5
+        ) * 45;
+
+
+    petalPositions[
+        index + 1
+    ] =
+        Math.random() *
+        12;
+
+
+    petalPositions[
+        index + 2
+    ] =
+        (
+            Math.random() -
+            0.5
+        ) * 45;
+
+
+    petalSpeeds.push(
+
+        0.25 +
+        Math.random() *
+        0.45
+
+    );
+
+}
+
+
+const petalGeometry =
+    new THREE.BufferGeometry();
+
+
+petalGeometry.setAttribute(
+
+    'position',
+
+    new THREE.BufferAttribute(
+
+        petalPositions,
+
+        3
+
+    )
+
+);
+
+
+const petalMaterial =
+    new THREE.PointsMaterial({
+
+        color:
+            0xffa7b8,
+
+        size:
+            0.055,
+
+        transparent:
+            true,
+
+        opacity:
+            0.8,
+
+        depthWrite:
+            false
+
+    });
+
+
+const petals =
+    new THREE.Points(
+
+        petalGeometry,
+
+        petalMaterial
+
+    );
+
+
+scene.add(
+    petals
+);
+
+
+// ============================================================
+// VARIABLES DE MODELO
+// ============================================================
+
+const loader =
+    new FBXLoader();
+
+
+const clock =
+    new THREE.Clock();
+
+
+const actions = {};
+
+
+let model;
+
+
+let mixer;
+
+
+let currentAction =
+    null;
+
+
+let currentAnimationName =
+    null;
+
+
+// ============================================================
+// MOVIMIENTO
+// ============================================================
+
+const MOVE_SPEED =
+    2.5;
+
+
+const TURN_SPEED =
+    2.2;
+
+
+let heading =
+    Math.PI;
+
+
+// Si camina mirando hacia atrás,
+// cambia a Math.PI.
+const MODEL_FORWARD_OFFSET =
+    0;
+
+
+const forwardDirection =
+    new THREE.Vector3();
+
+
+// ============================================================
+// TECLAS DE MOVIMIENTO
+// ============================================================
+
+const movementKeys = {
+
+    ArrowUp:
+        false,
+
+    ArrowDown:
+        false,
+
+    ArrowLeft:
+        false,
+
+    ArrowRight:
+        false
+
+};
+
+
+// ============================================================
+// ANIMACIONES
+// ============================================================
+
+const animationFiles = {
+
+    dagger:
+        './assets/models/animations/Double_Dagger.fbx',
+
+    jumping:
+        './assets/models/animations/Jumping.fbx',
+
+    punching:
+        './assets/models/animations/Punching.fbx',
+
+    stand:
+        './assets/models/animations/Stand.fbx',
+
+    uppercut:
+        './assets/models/animations/Uppercut.fbx',
+
+    walk:
+        './assets/models/animations/Walk.fbx'
+
+};
+
+
+const animationLabels = {
+
+    dagger:
+        'DOUBLE DAGGER',
+
+    jumping:
+        'JUMPING',
+
+    punching:
+        'PUNCHING',
+
+    stand:
+        'STAND',
+
+    uppercut:
+        'UPPERCUT',
+
+    walk:
+        'WALK'
+
+};
+
+
+// ============================================================
+// CARGAR ANIMACIÓN
+// ============================================================
+
+function loadAnimation(
+    name,
+    url
+) {
+
+    return new Promise(
+
+        (
+            resolve,
+            reject
+        ) => {
+
+            loader.load(
+
+                url,
+
+                (fbx) => {
+
+                    if (
+
+                        !fbx.animations
+
+                        ||
+
+                        fbx.animations.length ===
+                        0
+
+                    ) {
+
+                        console.warn(
+
+                            `El archivo ${name} no contiene animaciones.`
+
+                        );
+
+
+                        resolve();
+
+
+                        return;
+
+                    }
+
+
+                    const clip =
+                        fbx.animations[0];
+
+
+                    const action =
+                        mixer.clipAction(
+                            clip
+                        );
+
+
+                    action.setLoop(
+
+                        THREE.LoopRepeat,
+
+                        Infinity
+
+                    );
+
+
+                    action.clampWhenFinished =
+                        false;
+
+
+                    action.enabled =
+                        true;
+
+
+                    actions[name] =
+                        action;
+
+
+                    console.log(
+
+                        `Animación cargada: ${name}`
+
+                    );
+
+
+                    resolve();
+
+                },
+
+                undefined,
+
+                (error) => {
+
+                    console.error(
+
+                        `Error cargando ${name}:`,
+
+                        error
+
+                    );
+
+
+                    reject(
+                        error
+                    );
+
+                }
+
+            );
+
+        }
+
     );
 
 }
 
 
 // ============================================================
-// CREAR ENTORNO SAMURÁI
+// REPRODUCIR ANIMACIÓN
 // ============================================================
 
-function initializeSamuraiEnvironment() {
+function playAction(
+    name
+) {
+
+    const nextAction =
+        actions[name];
+
 
     if (
-        environmentReady
+        !nextAction
+    ) {
+
+        console.warn(
+
+            `No existe la animación: ${name}`
+
+        );
+
+
+        return;
+
+    }
+
+
+    // No reiniciar si ya está activa.
+    if (
+        currentAction ===
+        nextAction
     ) {
 
         return;
@@ -2634,131 +1632,166 @@ function initializeSamuraiEnvironment() {
     }
 
 
-    environmentReady =
-        true;
-
-
     // ========================================================
-    // CIELO
+    // PRIMERA ANIMACIÓN
     // ========================================================
 
-    const skyTexture =
-        createSamuraiSky();
+    if (
+        !currentAction
+    ) {
+
+        nextAction
+            .reset()
+            .setEffectiveTimeScale(
+                1
+            )
+            .setEffectiveWeight(
+                1
+            )
+            .play();
 
 
-    skyDome =
-        new THREE.Mesh(
+        currentAction =
+            nextAction;
 
-            new THREE.SphereGeometry(
 
-                400,
+        currentAnimationName =
+            name;
 
-                32,
 
-                20
-
-            ),
-
-            new THREE.MeshBasicMaterial({
-
-                map:
-                    skyTexture,
-
-                side:
-                    THREE.BackSide,
-
-                fog:
-                    false
-
-            })
-
+        updateAnimationName(
+            name
         );
 
 
-    scene.add(
-        skyDome
-    );
+        return;
+
+    }
 
 
     // ========================================================
-    // MEJORAR PISO
+    // PROGRESO ACTUAL
     // ========================================================
 
-    floorMaterial.map =
-        createGroundTexture();
+    const currentClip =
+        currentAction.getClip();
 
 
-    floorMaterial.bumpMap =
-        createGroundBump();
+    let progress =
+        0;
 
 
-    floorMaterial.bumpScale =
-        0.10;
+    if (
+        currentClip.duration >
+        0
+    ) {
+
+        progress =
+
+            (
+                currentAction.time
+                %
+                currentClip.duration
+            )
+
+            /
+
+            currentClip.duration;
+
+    }
 
 
-    floorMaterial.color.set(
-        0xffffff
-    );
+    // ========================================================
+    // NUEVA ANIMACIÓN
+    // ========================================================
+
+    const nextClip =
+        nextAction.getClip();
 
 
-    floorMaterial.needsUpdate =
+    nextAction.reset();
+
+
+    nextAction.enabled =
         true;
 
 
-    // ========================================================
-    // PÉTALOS
-    // ========================================================
-
-    createPetals();
+    nextAction.setEffectiveTimeScale(
+        1
+    );
 
 
-    console.log(
+    nextAction.setEffectiveWeight(
+        1
+    );
 
-        '✅ Entorno samurái listo.'
 
+    nextAction.time =
+
+        progress *
+
+        nextClip.duration;
+
+
+    nextAction.play();
+
+
+    nextAction.crossFadeFrom(
+
+        currentAction,
+
+        0.30,
+
+        true
+
+    );
+
+
+    currentAction =
+        nextAction;
+
+
+    currentAnimationName =
+        name;
+
+
+    updateAnimationName(
+        name
     );
 
 }
 
 
 // ============================================================
-// CREAR ENTORNO CUANDO EL NAVEGADOR ESTÉ LIBRE
+// ACTUALIZAR NOMBRE
 // ============================================================
 
-function scheduleEnvironmentInitialization() {
+function updateAnimationName(
+    name
+) {
+
+    const element =
+        document.getElementById(
+            'animation-name'
+        );
+
 
     if (
-        'requestIdleCallback'
-        in
-        window
+        !element
     ) {
 
-        requestIdleCallback(
-
-            initializeSamuraiEnvironment,
-
-            {
-
-                timeout:
-                    1200
-
-            }
-
-        );
+        return;
 
     }
 
-    else {
 
-        setTimeout(
+    element.textContent =
 
-            initializeSamuraiEnvironment,
+        animationLabels[name]
 
-            100
+        ||
 
-        );
-
-    }
+        name.toUpperCase();
 
 }
 
@@ -2778,13 +1811,16 @@ function updateInfiniteFloor() {
     }
 
 
+    // El piso se recoloca en bloques.
+    // No sigue exactamente al personaje,
+    // porque eso haría que pareciera una
+    // caminadora.
+
     floor.position.x =
 
         Math.floor(
 
-            model.position.x
-
-            /
+            model.position.x /
 
             FLOOR_RECENTER_STEP
 
@@ -2799,9 +1835,7 @@ function updateInfiniteFloor() {
 
         Math.floor(
 
-            model.position.z
-
-            /
+            model.position.z /
 
             FLOOR_RECENTER_STEP
 
@@ -2835,10 +1869,7 @@ function updateCharacterMovement(
         0;
 
 
-    // ========================================================
-    // GIRAR IZQUIERDA
-    // ========================================================
-
+    // izquierda
     if (
         movementKeys.ArrowLeft
     ) {
@@ -2849,10 +1880,7 @@ function updateCharacterMovement(
     }
 
 
-    // ========================================================
-    // GIRAR DERECHA
-    // ========================================================
-
+    // derecha
     if (
         movementKeys.ArrowRight
     ) {
@@ -2864,7 +1892,7 @@ function updateCharacterMovement(
 
 
     // ========================================================
-    // ROTACIÓN PROGRESIVA
+    // GIRO PROGRESIVO
     // ========================================================
 
     heading +=
@@ -2884,10 +1912,7 @@ function updateCharacterMovement(
         0;
 
 
-    // ========================================================
-    // ADELANTE
-    // ========================================================
-
+    // adelante
     if (
         movementKeys.ArrowUp
     ) {
@@ -2898,10 +1923,7 @@ function updateCharacterMovement(
     }
 
 
-    // ========================================================
-    // ATRÁS
-    // ========================================================
-
+    // atrás
     if (
         movementKeys.ArrowDown
     ) {
@@ -2912,12 +1934,8 @@ function updateCharacterMovement(
     }
 
 
-    // ========================================================
-    // IZQUIERDA / DERECHA SOLAS
-    // ========================================================
-    //
-    // Sigue caminando mientras da la vuelta.
-    // ========================================================
+    // Flecha izquierda/derecha sola:
+    // sigue caminando mientras gira.
 
     if (
 
@@ -2935,10 +1953,6 @@ function updateCharacterMovement(
     }
 
 
-    // ========================================================
-    // ROTAR MODELO
-    // ========================================================
-
     model.rotation.y =
 
         heading
@@ -2948,13 +1962,8 @@ function updateCharacterMovement(
         MODEL_FORWARD_OFFSET;
 
 
-    // ========================================================
-    // NO HAY MOVIMIENTO
-    // ========================================================
-
     if (
-        movementDirection ===
-        0
+        movementDirection === 0
     ) {
 
         return;
@@ -2963,29 +1972,26 @@ function updateCharacterMovement(
 
 
     // ========================================================
-    // DIRECCIÓN FRONTAL
+    // DIRECCIÓN
     // ========================================================
 
-    forwardDirection
-        .set(
+    forwardDirection.set(
 
-            Math.sin(
-                heading
-            ),
+        Math.sin(
+            heading
+        ),
 
-            0,
+        0,
 
-            Math.cos(
-                heading
-            )
-
+        Math.cos(
+            heading
         )
-        .normalize();
+
+    );
 
 
-    // ========================================================
-    // DISTANCIA
-    // ========================================================
+    forwardDirection.normalize();
+
 
     const distance =
 
@@ -3019,7 +2025,7 @@ function updateCharacterMovement(
 
 
     // ========================================================
-    // MOVER PERSONAJE
+    // PERSONAJE
     // ========================================================
 
     model.position.x +=
@@ -3060,36 +2066,12 @@ function updatePetals(
     delta
 ) {
 
-    if (
-
-        !petals
-
-        ||
-
-        !petalGeometry
-
-    ) {
-
-        return;
-
-    }
-
-
     const positions =
 
         petalGeometry
             .attributes
             .position
             .array;
-
-
-    const time =
-
-        performance.now()
-
-        *
-
-        0.001;
 
 
     for (
@@ -3099,13 +2081,8 @@ function updatePetals(
     ) {
 
         const index =
-            i *
-            3;
+            i * 3;
 
-
-        // ====================================================
-        // CAÍDA
-        // ====================================================
 
         positions[
             index + 1
@@ -3118,17 +2095,13 @@ function updatePetals(
             delta;
 
 
-        // ====================================================
-        // MOVIMIENTO LATERAL
-        // ====================================================
-
-        positions[
-            index
-        ] +=
+        positions[index] +=
 
             Math.sin(
 
-                time
+                performance.now()
+                *
+                0.001
 
                 +
 
@@ -3141,62 +2114,18 @@ function updatePetals(
             0.003;
 
 
-        // ====================================================
-        // REAPARECER ARRIBA
-        // ====================================================
-
         if (
-
             positions[
-                index + 1
+            index + 1
             ] < 0
-
         ) {
 
             positions[
-                index
-            ] =
-
-                (
-                    Math.random()
-
-                    -
-
-                    0.5
-                )
-
-                *
-
-                45;
-
-
-            positions[
                 index + 1
             ] =
-
-                10
-
-                +
-
+                10 +
                 Math.random() *
                 4;
-
-
-            positions[
-                index + 2
-            ] =
-
-                (
-                    Math.random()
-
-                    -
-
-                    0.5
-                )
-
-                *
-
-                45;
 
         }
 
@@ -3210,9 +2139,8 @@ function updatePetals(
         true;
 
 
-    // ========================================================
-    // LOS PÉTALOS SIGUEN AL PERSONAJE
-    // ========================================================
+    // Los pétalos siguen aproximadamente
+    // la zona donde está el jugador.
 
     if (
         model
@@ -3228,6 +2156,153 @@ function updatePetals(
     }
 
 }
+
+
+// ============================================================
+// CARGAR PERSONAJE
+// ============================================================
+
+loader.load(
+
+    './assets/models/character.fbx',
+
+    async (
+        fbx
+    ) => {
+
+        model =
+            fbx;
+
+
+        model.scale.setScalar(
+            0.01
+        );
+
+
+        model.position.set(
+            0,
+            0,
+            0
+        );
+
+
+        model.rotation.y =
+
+            heading
+
+            +
+
+            MODEL_FORWARD_OFFSET;
+
+
+        model.traverse(
+
+            (
+                child
+            ) => {
+
+                if (
+                    child.isMesh
+                ) {
+
+                    child.castShadow =
+                        true;
+
+
+                    child.receiveShadow =
+                        true;
+
+                }
+
+            }
+
+        );
+
+
+        scene.add(
+            model
+        );
+
+
+        mixer =
+            new THREE.AnimationMixer(
+                model
+            );
+
+
+        try {
+
+            await Promise.all(
+
+                Object
+                    .entries(
+                        animationFiles
+                    )
+                    .map(
+
+                        (
+                            [
+                                name,
+                                url
+                            ]
+                        ) =>
+
+                            loadAnimation(
+                                name,
+                                url
+                            )
+
+                    )
+
+            );
+
+
+            console.log(
+
+                'Todas las animaciones fueron cargadas.'
+
+            );
+
+
+            playAction(
+                'stand'
+            );
+
+        }
+
+        catch (
+        error
+        ) {
+
+            console.error(
+
+                'Error cargando animaciones:',
+
+                error
+
+            );
+
+        }
+
+    },
+
+    undefined,
+
+    (
+        error
+    ) => {
+
+        console.error(
+
+            'Error cargando character.fbx:',
+
+            error
+
+        );
+
+    }
+
+);
 
 
 // ============================================================
@@ -3247,13 +2322,9 @@ window.addEventListener(
         // ====================================================
 
         if (
-
             event.code
-
             in
-
             movementKeys
-
         ) {
 
             event.preventDefault();
@@ -3265,13 +2336,8 @@ window.addEventListener(
                 true;
 
 
-            // =================================================
-            // WALK
-            // =================================================
-            //
-            // Si Walk ya está activo
-            // NO se reinicia.
-            // =================================================
+            // Walk no se reinicia
+            // si ya está activo.
 
             playAction(
                 'walk'
@@ -3284,7 +2350,7 @@ window.addEventListener(
 
 
         // ====================================================
-        // ANIMACIONES 1 - 6
+        // ANIMACIONES
         // ====================================================
 
         const keyboard = {
@@ -3312,7 +2378,7 @@ window.addEventListener(
 
         const animation =
             keyboard[
-                event.code
+            event.code
             ];
 
 
@@ -3344,13 +2410,9 @@ window.addEventListener(
     ) => {
 
         if (
-
             event.code
-
             in
-
             movementKeys
-
         ) {
 
             event.preventDefault();
@@ -3362,10 +2424,8 @@ window.addEventListener(
                 false;
 
 
-            // No cambiamos automáticamente
-            // a Stand.
-            //
-            // Walk puede continuar.
+            // NO cambiar a Stand.
+            // La animación Walk puede continuar.
 
         }
 
@@ -3375,7 +2435,7 @@ window.addEventListener(
 
 
 // ============================================================
-// AL CAMBIAR DE VENTANA
+// VENTANA PIERDE FOCO
 // ============================================================
 
 window.addEventListener(
@@ -3405,7 +2465,7 @@ window.addEventListener(
 
 
 // ============================================================
-// LOOP PRINCIPAL
+// LOOP
 // ============================================================
 
 function animate() {
@@ -3437,7 +2497,7 @@ function animate() {
 
 
     // ========================================================
-    // MOVIMIENTO
+    // PERSONAJE
     // ========================================================
 
     updateCharacterMovement(
@@ -3446,7 +2506,7 @@ function animate() {
 
 
     // ========================================================
-    // PISO INFINITO
+    // PISO
     // ========================================================
 
     updateInfiniteFloor();
@@ -3462,17 +2522,11 @@ function animate() {
 
 
     // ========================================================
-    // CIELO SIGUE AL PERSONAJE
+    // EL CIELO SIGUE AL JUGADOR
     // ========================================================
 
     if (
-
-        skyDome
-
-        &&
-
         model
-
     ) {
 
         skyDome.position.x =
@@ -3486,7 +2540,7 @@ function animate() {
 
 
     // ========================================================
-    // CÁMARA
+    // CONTROLES
     // ========================================================
 
     controls.update();
@@ -3508,7 +2562,7 @@ function animate() {
 
 
 // ============================================================
-// INICIAR LOOP
+// INICIAR
 // ============================================================
 
 renderer.setAnimationLoop(
@@ -3549,7 +2603,3 @@ window.addEventListener(
     }
 
 );
-
-loadCharacterFirst();
-
-scheduleEnvironmentInitialization();
